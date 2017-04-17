@@ -491,4 +491,10 @@ public class BlockInfo extends Block {
     }
   }
 
+  public void removeVersionsOlderThan(int limit) throws StorageException, TransactionContextException {
+    if (this.blockVersion < limit) {
+      remove();
+    }
+  }
+
 }

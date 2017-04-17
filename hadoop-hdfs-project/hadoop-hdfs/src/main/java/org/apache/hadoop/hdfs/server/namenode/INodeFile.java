@@ -335,4 +335,12 @@ public class INodeFile extends INode implements BlockCollection {
     setSizeNoPersistence(this.computeFileSize(true));
     save();
   }
+
+  //TODO: Needs refining
+  public void removeOlderVersions() throws StorageException, TransactionContextException {
+    BlockInfo[] blocks = getBlocks();
+    for (BlockInfo block : blocks) {
+      block.removeVersionsOlderThan(lastVersion - MAX_VERSIONS);
+    }
+  }
 }
