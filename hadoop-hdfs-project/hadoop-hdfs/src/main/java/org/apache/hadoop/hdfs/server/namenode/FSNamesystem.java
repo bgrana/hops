@@ -2509,7 +2509,7 @@ public class FSNamesystem
   Block createNewBlock(INodeFile pendingFile)
       throws IOException, StorageException {
     Block b = new Block(IDsGeneratorFactory.getInstance().getUniqueBlockID()
-        , 0, 0); // HOP. previous code was getFSImage().getUniqueBlockId()
+        , 0, 0, pendingFile.getLastVersion() + 1); // HOP. previous code was getFSImage().getUniqueBlockId()
     // Increment the generation stamp for every new block.
     b.setGenerationStampNoPersistance(pendingFile.nextGenerationStamp());
     return b;
