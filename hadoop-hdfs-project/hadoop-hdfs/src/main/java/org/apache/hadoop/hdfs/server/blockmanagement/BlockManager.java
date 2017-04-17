@@ -604,9 +604,15 @@ public class BlockManager {
     if (lastBlock.isComplete()) {
       return false; // already completed (e.g. by syncBlock)
     }
+
+    // Clone the BlockInfo of the last block it creates a new row in the DB
+    BlockInfo newBlockInfo = BlockInfo.cloneBlock(lastBlock);
+    // Set version of the commit block to the last file version so it changes
+    // later the version of the newBlockInfo when saving it to the DB
+    commitBlock.setVersionNoPersistance(((INodeFile) bc).getLastVersion());
     
     final boolean b =
-        commitBlock((BlockInfoUnderConstruction) lastBlock, commitBlock);
+        commitBlock((BlockInfoUnderConstruction) newBlockInfo, commitBlock);
     LOG.debug(
         "commitOrCompleteLastBlock. Commited Block " + lastBlock.getBlockId());
     if (countNodes(lastBlock).liveReplicas() >= minReplication) {

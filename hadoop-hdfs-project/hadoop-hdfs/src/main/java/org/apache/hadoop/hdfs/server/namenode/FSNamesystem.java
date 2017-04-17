@@ -1840,6 +1840,8 @@ public class FSNamesystem
     INodeFileUnderConstruction cons =
         file.convertToUnderConstruction(leaseHolder, clientMachine, clientNode);
     leaseManager.addLease(cons.getClientName(), src);
+    // Increase file last version before committing any new blocks
+    cons.increaseLastVersion();
     LocatedBlock ret = blockManager.convertLastBlockToUnderConstruction(cons);
     return ret;
   }
