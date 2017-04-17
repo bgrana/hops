@@ -61,6 +61,7 @@ public class BlockInfo extends Block {
     @Override
     public Annotation getAnnotated() {
       switch (this) {
+        //TODO: This search needs to be adjusted to the new primary key (blockId, INodeId, Version)
         case ByBlockIdAndINodeId:
           return Annotation.PrimaryKey;
         case ByBlockIdsAndINodeIds:
@@ -139,6 +140,7 @@ public class BlockInfo extends Block {
   private BlockCollection bc;
   private int blockIndex = -1;
   private long timestamp = 1;
+  private int blockVersion;
   
   protected int inodeId = INode.NON_EXISTING_ID;
   
@@ -149,6 +151,7 @@ public class BlockInfo extends Block {
       this.bc = ((BlockInfo) blk).bc;
       this.blockIndex = ((BlockInfo) blk).blockIndex;
       this.timestamp = ((BlockInfo) blk).timestamp;
+      this.blockVersion = ((BlockInfo) blk).blockVersion;
       if (inodeId != ((BlockInfo) blk).inodeId) {
         throw new IllegalArgumentException("inodeId does not match");
       }
@@ -171,6 +174,7 @@ public class BlockInfo extends Block {
     this.blockIndex = from.blockIndex;
     this.timestamp = from.timestamp;
     this.inodeId = from.inodeId;
+    this.blockVersion = from.blockVersion;
   }
   
   public BlockCollection getBlockCollection()
@@ -368,7 +372,21 @@ public class BlockInfo extends Block {
     setTimestampNoPersistance(ts);
     save();
   }
-  
+
+  public int getBlockVersion() {
+    return this.blockVersion;
+  }
+
+  public void setBlockVersionNoPersistance(int blockVersion) {
+    this.blockVersion = blockVersion;
+  }
+
+  public void setBlockVersion(int blockVersion)
+          throws StorageException, TransactionContextException {
+    setBlockVersionNoPersistance(blockVersion);
+    save();
+  }
+
   protected DatanodeDescriptor[] getDatanodes(DatanodeManager datanodeMgr,
       List<? extends ReplicaBase> replicas) {
     int numLocations = replicas.size();
@@ -437,9 +455,9 @@ public class BlockInfo extends Block {
     save();
   }
 
-  public void set(long blkid, long len, long genStamp)
+  public void set(long blkid, long len, long genStamp, int blockVersion)
       throws StorageException, TransactionContextException {
-    setNoPersistance(blkid, len, genStamp);
+    setNoPersistance(blkid, len, genStamp, blockVersion);
     save();
   }
   
