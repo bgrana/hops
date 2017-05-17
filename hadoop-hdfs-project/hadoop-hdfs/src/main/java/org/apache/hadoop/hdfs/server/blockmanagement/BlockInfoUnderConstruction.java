@@ -163,7 +163,7 @@ public class BlockInfoUnderConstruction extends BlockInfo {
               ", expected id = " + getBlockId());
     }
     blockUCState = BlockUCState.COMMITTED;
-    this.set(getBlockId(), block.getNumBytes(), block.getGenerationStamp(), block.getVersion());
+    this.set(getBlockId(), block.getNumBytes(), block.getGenerationStamp());
   }
 
   /**

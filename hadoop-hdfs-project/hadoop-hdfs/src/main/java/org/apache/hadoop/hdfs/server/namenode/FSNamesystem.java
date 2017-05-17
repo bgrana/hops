@@ -1840,9 +1840,11 @@ public class FSNamesystem
     INodeFileUnderConstruction cons =
         file.convertToUnderConstruction(leaseHolder, clientMachine, clientNode);
     leaseManager.addLease(cons.getClientName(), src);
+
     // Increase file last version before committing any new blocks
     cons.increaseLastVersion();
     LocatedBlock ret = blockManager.convertLastBlockToUnderConstruction(cons);
+
     return ret;
   }
 
@@ -2511,9 +2513,11 @@ public class FSNamesystem
   Block createNewBlock(INodeFile pendingFile)
       throws IOException, StorageException {
     Block b = new Block(IDsGeneratorFactory.getInstance().getUniqueBlockID()
-        , 0, 0, pendingFile.getLastVersion() + 1); // HOP. previous code was getFSImage().getUniqueBlockId()
+        , 0, 0); // HOP. previous code was getFSImage().getUniqueBlockId()
     // Increment the generation stamp for every new block.
     b.setGenerationStampNoPersistance(pendingFile.nextGenerationStamp());
+    // Set block version to file last version
+    b.setBlockVersionNoPersistance(pendingFile.getLastVersion());
     return b;
   }
 

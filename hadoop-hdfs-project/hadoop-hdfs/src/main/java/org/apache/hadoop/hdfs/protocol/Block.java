@@ -93,29 +93,27 @@ public class Block implements Writable, Comparable<Block> {
   private long blockId;
   private long numBytes;
   private long generationStamp;
-  private int blockVersion;
 
   public Block() {
-    this(NON_EXISTING_BLK_ID, 0, 0, 0);
+    this(NON_EXISTING_BLK_ID, 0, 0);
   }
 
-  public Block(final long blkid, final long len, final long generationStamp, final int version) {
-    setNoPersistance(blkid, len, generationStamp, version);
+  public Block(final long blkid, final long len, final long generationStamp) {
+    setNoPersistance(blkid, len, generationStamp);
   }
 
   public Block(final long blkid) {
-    this(blkid, 0, GenerationStamp.GRANDFATHER_GENERATION_STAMP, 0);
+    this(blkid, 0, GenerationStamp.GRANDFATHER_GENERATION_STAMP);
   }
 
   public Block(Block blk) {
-    this(blk.blockId, blk.numBytes, blk.generationStamp, blk.blockVersion);
+    this(blk.blockId, blk.numBytes, blk.generationStamp);
   }
 
-  public void setNoPersistance(long blkid, long len, long genStamp, int version) {
+  public void setNoPersistance(long blkid, long len, long genStamp) {
     this.blockId = blkid;
     this.numBytes = len;
     this.generationStamp = genStamp;
-    this.blockVersion = version;
   }
 
   /**
@@ -152,12 +150,12 @@ public class Block implements Writable, Comparable<Block> {
     generationStamp = stamp;
   }
 
-  public int getVersion() {
-    return blockVersion;
+  public int getBlockVersion() {
+    return (int) blockId%MAX_VERSION_NUMBER;
   }
 
-  public void setVersionNoPersistance(int version) {
-    this.blockVersion = version;
+  public void setBlockVersionNoPersistance(int version) {
+    setBlockIdNoPersistance((blockId/MAX_VERSION_NUMBER) + version);
   }
 
   /**

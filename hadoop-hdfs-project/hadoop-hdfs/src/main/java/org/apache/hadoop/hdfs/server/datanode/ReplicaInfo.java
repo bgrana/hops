@@ -71,8 +71,7 @@ abstract public class ReplicaInfo extends Block implements Replica {
    *     directory path where block and meta files are located
    */
   ReplicaInfo(Block block, FsVolumeSpi vol, File dir) {
-    this(block.getBlockId(), block.getNumBytes(), block.getGenerationStamp(),
-        vol, dir);
+    this(block.getBlockId(), block.getNumBytes(), block.getGenerationStamp(), vol, dir);
   }
   
   /**

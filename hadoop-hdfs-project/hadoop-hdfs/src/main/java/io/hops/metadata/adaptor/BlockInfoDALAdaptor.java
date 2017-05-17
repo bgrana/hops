@@ -127,8 +127,7 @@ public class BlockInfoDALAdaptor extends
           new BlockInfo(hdfsClass.getBlockId(), hdfsClass.getBlockIndex(),
               hdfsClass.getInodeId(), hdfsClass.getNumBytes(),
               hdfsClass.getGenerationStamp(),
-              hdfsClass.getBlockUCState().ordinal(), hdfsClass.getTimestamp(),
-              hdfsClass.getBlockVersion());
+              hdfsClass.getBlockUCState().ordinal(), hdfsClass.getTimestamp());
       if (hdfsClass instanceof BlockInfoUnderConstruction) {
         BlockInfoUnderConstruction ucBlock =
             (BlockInfoUnderConstruction) hdfsClass;
@@ -146,7 +145,7 @@ public class BlockInfoDALAdaptor extends
       BlockInfo dalClass) throws StorageException {
     if (dalClass != null) {
       Block b = new Block(dalClass.getBlockId(), dalClass.getNumBytes(),
-          dalClass.getGenerationStamp(), dalClass.getBlockVersion());
+          dalClass.getGenerationStamp());
       org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo blockInfo = null;
 
       if (dalClass.getBlockUCState() >
@@ -169,7 +168,6 @@ public class BlockInfoDALAdaptor extends
       blockInfo.setINodeIdNoPersistance(dalClass.getInodeId());
       blockInfo.setTimestampNoPersistance(dalClass.getTimeStamp());
       blockInfo.setBlockIndexNoPersistance(dalClass.getBlockIndex());
-      blockInfo.setBlockVersionNoPersistance(dalClass.getBlockVersion());
 
       return blockInfo;
     } else {
