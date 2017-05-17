@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 public class Block implements Writable, Comparable<Block> {
   public static final String BLOCK_FILE_PREFIX = "blk_";
   public static final String METADATA_EXTENSION = ".meta";
+  private static final int MAX_VERSION_NUMBER = 100000;
 
   static {                                      // register a ctor
     WritableFactories.setFactory(Block.class, new WritableFactory() {
