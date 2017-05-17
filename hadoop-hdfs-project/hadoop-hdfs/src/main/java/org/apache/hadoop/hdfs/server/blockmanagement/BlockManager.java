@@ -604,15 +604,9 @@ public class BlockManager {
     if (lastBlock.isComplete()) {
       return false; // already completed (e.g. by syncBlock)
     }
-
-    // Clone the BlockInfo of the last block it creates a new row in the DB
-    BlockInfo newBlockInfo = BlockInfo.cloneBlock(lastBlock);
-    // Set version of the commit block to the last file version so it changes
-    // later the version of the newBlockInfo when saving it to the DB
-    commitBlock.setVersionNoPersistance(((INodeFile) bc).getLastVersion());
     
     final boolean b =
-        commitBlock((BlockInfoUnderConstruction) newBlockInfo, commitBlock);
+        commitBlock((BlockInfoUnderConstruction) lastBlock, commitBlock);
     LOG.debug(
         "commitOrCompleteLastBlock. Commited Block " + lastBlock.getBlockId());
     if (countNodes(lastBlock).liveReplicas() >= minReplication) {
@@ -722,9 +716,16 @@ public class BlockManager {
     assert oldBlock ==
         getStoredBlock(oldBlock) : "last block of the file is not in blocksMap";
 
-    DatanodeDescriptor[] targets = getNodes(oldBlock);
+    // Clone the BlockInfo of the last block. It creates a new row in the DB
+    BlockInfo clonedLastBlock = BlockInfo.cloneBlock(oldBlock);
+    // Set version of the new last block to the last file version so it changes
+    // later the version of the newBlockInfo when saving it to the DB
+    clonedLastBlock.setBlockVersionNoPersistance(((INodeFile) bc).getLastVersion());
 
-    BlockInfoUnderConstruction ucBlock = bc.setLastBlock(oldBlock, targets);
+    // TODO: Not clear if I should get the nodes from the old block or from the clone.
+    DatanodeDescriptor[] targets = getNodes(clonedLastBlock);
+
+    BlockInfoUnderConstruction ucBlock = bc.setLastBlock(clonedLastBlock, targets);
     blocksMap.replaceBlock(ucBlock);
 
     // Remove block from replication queue.
