@@ -61,7 +61,6 @@ public class BlockInfo extends Block {
     @Override
     public Annotation getAnnotated() {
       switch (this) {
-        //TODO: This search needs to be adjusted to the new primary key (blockId, INodeId, Version)
         case ByBlockIdAndINodeId:
           return Annotation.PrimaryKey;
         case ByBlockIdsAndINodeIds:
@@ -483,8 +482,8 @@ public class BlockInfo extends Block {
     }
   }
 
-  public void removeVersionsOlderThan(int limit) throws StorageException, TransactionContextException {
-    if (getBlockVersion() < limit) {
+  public void removeIfVersion(int version) throws StorageException, TransactionContextException {
+    if (getBlockVersion() == version) {
       remove();
     }
   }

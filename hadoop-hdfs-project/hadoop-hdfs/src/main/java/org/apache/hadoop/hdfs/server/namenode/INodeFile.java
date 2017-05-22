@@ -333,12 +333,19 @@ public class INodeFile extends INode implements BlockCollection {
     setSizeNoPersistence(this.computeFileSize(true));
     save();
   }
-
-  //TODO: Needs refining
-  public void removeOlderVersions() throws StorageException, TransactionContextException {
+  
+  // Use BEFORE incrementing file last version when openning for append
+  public void removeOldBlocks() throws StorageException, TransactionContextException {
     BlockInfo[] blocks = getBlocks();
     for (BlockInfo block : blocks) {
-      block.removeVersionsOlderThan(lastVersion - MAX_VERSIONS);
+
+      // Version to delete is always (lastVersion + 1) % MAX_VERSION unless the block with that version is complete,
+      // in which case we change its version to 0 and keep it
+      if (block.getNumBytes() == getPreferredBlockSize() && block.getBlockVersion() == (lastVersion + 1) % MAX_VERSION){
+        block.setBlockVersion((byte) (MAX_VERSION + 1));
+      } else {
+        block.removeIfVersion((lastVersion + 1) % MAX_VERSION);
+      }
     }
   }
 }

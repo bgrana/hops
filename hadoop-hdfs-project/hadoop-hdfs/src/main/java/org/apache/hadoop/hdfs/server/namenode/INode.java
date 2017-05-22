@@ -983,6 +983,11 @@ public abstract class INode implements Comparable<byte[]> {
   }
 
   public void increaseLastVersion() throws TransactionContextException, StorageException {
-    this.setLastVersion((byte) (this.lastVersion + 1));
+    if (lastVersion == MAX_VERSION) {
+      // Version 0 reserved for old completed blocks
+      this.setLastVersion((byte) 1);
+    } else {
+      this.setLastVersion((byte) (this.lastVersion + 1));
+    }
   }
 }
