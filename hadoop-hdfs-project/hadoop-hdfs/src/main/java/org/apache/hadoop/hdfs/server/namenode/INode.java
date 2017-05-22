@@ -129,7 +129,7 @@ public abstract class INode implements Comparable<byte[]> {
   protected INodeDirectory parent;
   protected long modificationTime;
   protected long accessTime;
-  protected int lastVersion;
+  protected byte lastVersion;
   
 
   public static final int NON_EXISTING_ID = 0;
@@ -951,20 +951,20 @@ public abstract class INode implements Comparable<byte[]> {
     return (short) (parentInode.myDepth()+1);
   }
 
-  public int getLastVersion() {
+  public byte getLastVersion() {
     return lastVersion;
   }
 
-  public void setLastVersionNoPersistance(int version) {
+  public void setLastVersionNoPersistance(byte version) {
     this.lastVersion = version;
   }
 
-  public void setLastVersion(int lastVersion) throws TransactionContextException, StorageException {
+  public void setLastVersion(byte lastVersion) throws TransactionContextException, StorageException {
     setLastVersionNoPersistance(lastVersion);
     save();
   }
 
   public void increaseLastVersion() throws TransactionContextException, StorageException {
-    this.setLastVersion(this.lastVersion + 1);
+    this.setLastVersion((byte) (this.lastVersion + 1));
   }
 }
