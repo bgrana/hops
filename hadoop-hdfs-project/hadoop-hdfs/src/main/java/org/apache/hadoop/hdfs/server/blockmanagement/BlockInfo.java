@@ -370,6 +370,15 @@ public class BlockInfo extends Block {
     save();
   }
 
+  public byte getBlockVersion() {
+    return (byte) (getBlockId() & INode.BLOCK_VERSION_MASK);
+  }
+
+  public void setBlockVersion(byte version)
+          throws StorageException, TransactionContextException {
+    setBlockId((getBlockId() & ~INode.BLOCK_VERSION_MASK) | version);
+  }
+
   protected DatanodeDescriptor[] getDatanodes(DatanodeManager datanodeMgr,
       List<? extends ReplicaBase> replicas) {
     int numLocations = replicas.size();

@@ -53,8 +53,6 @@ public class INodeFile extends INode implements BlockCollection {
     return (INodeFile) inode;
   }
 
-  private static final int MAX_VERSIONS = 10;
-
   private int generationStamp = (int) GenerationStamp.FIRST_VALID_STAMP;
   private long size;
   

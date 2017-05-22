@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
+import io.hops.common.IDsGeneratorFactory;
 import io.hops.common.INodeUtil;
 import io.hops.exception.StorageException;
 import io.hops.exception.TransactionContextException;
@@ -720,9 +721,9 @@ public class BlockManager {
     BlockInfo clonedLastBlock = BlockInfo.cloneBlock(oldBlock);
     // Set version of the new last block to the last file version so it changes
     // later the version of the newBlockInfo when saving it to the DB
-    clonedLastBlock.setBlockVersionNoPersistance(((INodeFile) bc).getLastVersion());
+    clonedLastBlock.setBlockIdNoPersistance(
+            ((INodeFile) bc).getLastVersion() + IDsGeneratorFactory.getInstance().getUniqueBlockID());
 
-    // TODO: Not clear if I should get the nodes from the old block or from the clone.
     DatanodeDescriptor[] targets = getNodes(clonedLastBlock);
 
     BlockInfoUnderConstruction ucBlock = bc.setLastBlock(clonedLastBlock, targets);

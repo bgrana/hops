@@ -57,6 +57,7 @@ public abstract class INode implements Comparable<byte[]> {
   
   static final List<INode> EMPTY_LIST =
       Collections.unmodifiableList(new ArrayList<INode>());
+  static final byte MAX_VERSION = 10;
 
 
   public static enum Finder implements FinderType<INode> {
@@ -143,16 +144,18 @@ public abstract class INode implements Comparable<byte[]> {
 
 
   //Number of bits for Block size
-  final static short BLOCK_BITS = 48;
+  final static short BLOCK_BITS = 40;
   final static short REPLICATION_BITS = 8;
   final static short BOOLEAN_BITS = 8;
+  final static short VERSION_BITS = 8;
   final static short HAS_BLKS_BITS = 1; // this is out of the 8 bits for the storing booleans
   //Header mask 64-bit representation
-  //Format:[8 bits for flags][8 bits for replication degree][48 bits for PreferredBlockSize]
-  final static long BLOCK_SIZE_MASK =  0x0000FFFFFFFFFFFFL;
-  final static long REPLICATION_MASK = 0x00FF000000000000L;
-  final static long FLAGS_MASK =       0xFF00000000000000L;
-  final static long HAS_BLKS_MASK =    0x0100000000000000L;
+  //Format:[8 bits for flags][8 bits for replication degree][40 bits for PreferredBlockSize][8 bits for Version]
+  public final static long BLOCK_VERSION_MASK = 0x00000000000000FFL;
+  final static long BLOCK_SIZE_MASK =    0x0000FFFFFFFFFF00L;
+  final static long REPLICATION_MASK =   0x00FF000000000000L;
+  final static long FLAGS_MASK =         0xFF00000000000000L;
+  final static long HAS_BLKS_MASK =      0x0100000000000000L;
   //[8 bits for flags]
   //0 bit : 1 if the file has blocks. 0 blocks
   //remaining bits are not yet used
@@ -881,7 +884,7 @@ public abstract class INode implements Comparable<byte[]> {
   }
 
   public static long getPreferredBlockSize(long header) {
-    return header & BLOCK_SIZE_MASK;
+    return (header & BLOCK_SIZE_MASK) >> VERSION_BITS;
   }
 
   protected void setPreferredBlockSizeNoPersistance(long preferredBlkSize) {
@@ -892,6 +895,10 @@ public abstract class INode implements Comparable<byte[]> {
     header = (header & ~BLOCK_SIZE_MASK) | (preferredBlkSize & BLOCK_SIZE_MASK);
   }
 
+  public static byte getBlockVersion(long header) {
+    return (byte) (header & BLOCK_VERSION_MASK);
+  }
+
   public long getHeader() {
     return header;
   }
@@ -899,6 +906,8 @@ public abstract class INode implements Comparable<byte[]> {
   public void setHeaderNoPersistance(long header) {
     long preferecBlkSize = getPreferredBlockSize(header);
     short replication = getBlockReplication(header);
+    byte version = getBlockVersion(header);
+
     if (preferecBlkSize < 0) {
       throw new IllegalArgumentException("Unexpected value for the " +
           "block size [" + preferecBlkSize + "]");
@@ -907,6 +916,12 @@ public abstract class INode implements Comparable<byte[]> {
     if (replication < 0) {
       throw new IllegalArgumentException("Unexpected value for the " +
           "replication [" + replication + "]");
+    }
+
+    // MAX_VERSION + 1 is a special version for old completed blocks
+    if (version < 0 || version > (MAX_VERSION + 1)) {
+      throw new IllegalArgumentException("Unexpected value for the " +
+              "version [" + version + "]");
     }
 
     this.header = header;
@@ -956,6 +971,9 @@ public abstract class INode implements Comparable<byte[]> {
   }
 
   public void setLastVersionNoPersistance(byte version) {
+    if (version > MAX_VERSION || version < 0) {
+      throw new IllegalArgumentException("Version number must be between 0 and " + MAX_VERSION);
+    }
     this.lastVersion = version;
   }
 

@@ -2512,12 +2512,13 @@ public class FSNamesystem
    */
   Block createNewBlock(INodeFile pendingFile)
       throws IOException, StorageException {
-    Block b = new Block(IDsGeneratorFactory.getInstance().getUniqueBlockID()
+
+    // Set block version to new version
+    long blockId = pendingFile.getLastVersion() + IDsGeneratorFactory.getInstance().getUniqueBlockID();
+    Block b = new Block(blockId
         , 0, 0); // HOP. previous code was getFSImage().getUniqueBlockId()
     // Increment the generation stamp for every new block.
     b.setGenerationStampNoPersistance(pendingFile.nextGenerationStamp());
-    // Set block version to file last version
-    b.setBlockVersionNoPersistance(pendingFile.getLastVersion());
     return b;
   }
 
