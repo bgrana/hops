@@ -47,10 +47,16 @@ public interface BlockCollection {
   public int numBlocks() throws StorageException, TransactionContextException;
 
   /**
-   * Get the blocks.
+   * Get the blocks for a given version.
+   */
+  public BlockInfo[] getBlocks(byte version)
+      throws StorageException, TransactionContextException;
+
+  /**
+   * Get all the blocks.
    */
   public BlockInfo[] getBlocks()
-      throws StorageException, TransactionContextException;
+          throws StorageException, TransactionContextException;
 
   /**
    * Get preferred block size for the collection

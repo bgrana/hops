@@ -102,16 +102,43 @@ public class INodeFile extends INode implements BlockCollection {
   }
 
   /**
-   * @return the blocks of the file.
+   * @return the blocks of the file for a given version.
    */
   @Override
+  public BlockInfo[] getBlocks(byte version)
+          throws StorageException, TransactionContextException {
+    if (getId() == INode.NON_EXISTING_ID) {
+      return BlockInfo.EMPTY_ARRAY;
+    }
+
+    // Blocks of the given version
+    List<BlockInfo> blocks = (List<BlockInfo>) EntityManager
+            .findList(BlockInfo.Finder.ByINodeIdAndVersion,id, version);
+
+    // Complete blocks from previous versions
+    blocks.addAll(EntityManager.findList(
+            BlockInfo.Finder.ByINodeIdAndPrevVersion,
+            id, version, this.getLastVersion()));
+
+    if (blocks != null) {
+      Collections.sort(blocks, BlockInfo.Order.ByBlockIndex);
+      BlockInfo[] blks = new BlockInfo[blocks.size()];
+      return blocks.toArray(blks);
+    } else {
+      return BlockInfo.EMPTY_ARRAY;
+    }
+  }
+
+  /**
+   * @return all the blocks of the file.
+   */
   public BlockInfo[] getBlocks()
-      throws StorageException, TransactionContextException {
+          throws StorageException, TransactionContextException {
     if (getId() == INode.NON_EXISTING_ID) {
       return BlockInfo.EMPTY_ARRAY;
     }
     List<BlockInfo> blocks = (List<BlockInfo>) EntityManager
-        .findList(BlockInfo.Finder.ByINodeId, id);
+            .findList(BlockInfo.Finder.ByINodeId, id);
     if (blocks != null) {
       Collections.sort(blocks, BlockInfo.Order.ByBlockIndex);
       BlockInfo[] blks = new BlockInfo[blocks.size()];
@@ -128,7 +155,7 @@ public class INodeFile extends INode implements BlockCollection {
       throws StorageException, TransactionContextException {
     List<BlockInfo> oldBlks = new ArrayList<BlockInfo>();
     for (INodeFile srcInode : inodes) {
-      for (BlockInfo block : srcInode.getBlocks()) {
+      for (BlockInfo block : srcInode.getBlocks(this.getLastVersion())) {
         BlockInfo copy = BlockInfo.cloneBlock(block);
         oldBlks.add(copy);
         addBlock(block);
@@ -159,7 +186,7 @@ public class INodeFile extends INode implements BlockCollection {
   int collectSubtreeBlocksAndClear(List<Block> v)
       throws StorageException, TransactionContextException {
     parent = null;
-    BlockInfo[] blocks = getBlocks();
+    BlockInfo[] blocks = getBlocks(this.getLastVersion());
     if (blocks != null && v != null) {
       for (BlockInfo blk : blocks) {
         blk.setBlockCollection(null);
@@ -333,7 +360,7 @@ public class INodeFile extends INode implements BlockCollection {
     setSizeNoPersistence(this.computeFileSize(true));
     save();
   }
-  
+
   // Use BEFORE incrementing file last version when openning for append
   public void removeOldBlocks() throws StorageException, TransactionContextException {
     BlockInfo[] blocks = getBlocks();

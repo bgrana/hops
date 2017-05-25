@@ -637,7 +637,7 @@ public class BlockManager {
     if (blkIndex < 0) {
       return null;
     }
-    BlockInfo curBlock = bc.getBlocks()[blkIndex];
+    BlockInfo curBlock = bc.getBlocks(((INodeFile)bc).getLastVersion())[blkIndex];
     if (curBlock.isComplete()) {
       return curBlock;
     }
@@ -671,7 +671,7 @@ public class BlockManager {
   private BlockInfo completeBlock(final MutableBlockCollection bc,
       final BlockInfo block, boolean force)
       throws IOException, StorageException {
-    BlockInfo[] fileBlocks = bc.getBlocks();
+    BlockInfo[] fileBlocks = bc.getBlocks(((INodeFile)bc).getLastVersion());
     for (int idx = 0; idx < fileBlocks.length; idx++) {
       if (fileBlocks[idx] == block) {
         return completeBlock(bc, idx, force);
@@ -3616,7 +3616,7 @@ public class BlockManager {
   public void checkReplication(BlockCollection bc)
       throws StorageException, TransactionContextException {
     final short expected = bc.getBlockReplication();
-    for (Block block : bc.getBlocks()) {
+    for (Block block : bc.getBlocks()) { // Check replication for all blocks and not a specific version.
       final NumberReplicas n = countNodes(block);
       if (isNeededReplication(block, expected, n.liveReplicas())) {
         neededReplications.add(getBlockInfo(block), n.liveReplicas(),
@@ -3992,7 +3992,7 @@ public class BlockManager {
     if (blkIndex < 0) {
       return null;
     }
-    BlockInfo curBlock = bc.getBlocks()[blkIndex];
+    BlockInfo curBlock = bc.getBlocks(((INodeFile)bc).getLastVersion())[blkIndex];
     LOG.debug("tryToCompleteBlock. blkId = " + curBlock.getBlockId());
     if (curBlock.isComplete()) {
       return curBlock;

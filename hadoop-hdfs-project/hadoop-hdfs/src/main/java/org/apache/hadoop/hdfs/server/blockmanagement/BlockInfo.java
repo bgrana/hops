@@ -51,7 +51,9 @@ public class BlockInfo extends Block {
     ByINodeId,
     ByINodeIds,
     ByMaxBlockIndexForINode,
-    ByBlockIdsAndINodeIds;
+    ByBlockIdsAndINodeIds,
+    ByINodeIdAndVersion,
+    ByINodeIdAndPrevVersion;
     
     @Override
     public Class getType() {
@@ -70,6 +72,10 @@ public class BlockInfo extends Block {
         case ByINodeId:
           return Annotation.PrunedIndexScan;
         case ByINodeIds:
+          return Annotation.BatchedPrunedIndexScan;
+        case ByINodeIdAndVersion:
+          return Annotation.BatchedPrunedIndexScan;
+        case ByINodeIdAndPrevVersion:
           return Annotation.BatchedPrunedIndexScan;
         default:
           throw new IllegalStateException();

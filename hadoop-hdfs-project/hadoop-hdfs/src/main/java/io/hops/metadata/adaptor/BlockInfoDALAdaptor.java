@@ -97,13 +97,13 @@ public class BlockInfoDALAdaptor extends
   }
 
   @Override
-  public List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo> findCompleteBlocksByINodeIdAndPrevVersion(int iNodeId, int version) throws StorageException {
+  public List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo> findCompleteBlocksByINodeIdAndPrevVersion(int iNodeId, byte version, byte lastVersion) throws StorageException {
     return (List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo>) convertDALtoHDFS(
-            dataAccess.findCompleteBlocksByINodeIdAndPrevVersion(iNodeId, version));
+            dataAccess.findCompleteBlocksByINodeIdAndPrevVersion(iNodeId, version, lastVersion));
   }
 
   @Override
-  public List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo> findByINodeIdAndVersion(int iNodeId, int version) throws StorageException {
+  public List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo> findByINodeIdAndVersion(int iNodeId, byte version) throws StorageException {
     return (List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo>) convertDALtoHDFS(
             dataAccess.findByINodeIdAndVersion(iNodeId, version));
   }

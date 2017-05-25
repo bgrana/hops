@@ -20,6 +20,7 @@ package io.hops.transaction.context;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.primitives.Ints;
+import io.hops.common.Pair;
 import io.hops.exception.StorageException;
 import io.hops.exception.TransactionContextException;
 import io.hops.metadata.common.FinderType;
@@ -51,6 +52,9 @@ public class BlockInfoContext extends BaseEntityContext<Long, BlockInfo> {
 
   private final Map<Integer, List<BlockInfo>> inodeBlocks =
       new HashMap<Integer, List<BlockInfo>>();
+
+  private final Map<Pair<Integer,Byte>, List<BlockInfo>> inodeAndVersionBlocks = new HashMap();
+
   private final List<BlockInfo> concatRemovedBlks = new ArrayList<BlockInfo>();
 
   private final BlockInfoDataAccess<BlockInfo> dataAccess;
@@ -120,6 +124,10 @@ public class BlockInfoContext extends BaseEntityContext<Long, BlockInfo> {
         return findBatch(bFinder, params);
       case ByINodeIds:
         return findByInodeIds(bFinder, params);
+      case ByINodeIdAndVersion:
+        return findByInodeIdAndVersion(bFinder, params);
+      case ByINodeIdAndPrevVersion:
+        return findByInodeIdAndPrevVersion(bFinder, params);
     }
     throw new RuntimeException(UNSUPPORTED_FINDER);
   }
@@ -158,6 +166,39 @@ public class BlockInfoContext extends BaseEntityContext<Long, BlockInfo> {
     return blockInfo.getBlockId();
   }
 
+
+  private List<BlockInfo> findByInodeIdAndVersion(BlockInfo.Finder bFinder,
+                                        final Object[] params)
+          throws TransactionContextException, StorageException {
+    List<BlockInfo> result = null;
+    final Integer inodeId = (Integer) params[0];
+    final Byte version = (Byte) params[1];
+    Pair key = new Pair(inodeId, version);
+    if (inodeBlocks.containsKey(key)) {
+      result = inodeAndVersionBlocks. get(key);
+      hit(bFinder, result, "inodeid", inodeId, "version", version);
+    } else {
+      aboutToAccessStorage(bFinder, params);
+      result = dataAccess.findByINodeIdAndVersion(inodeId, version);
+      inodeAndVersionBlocks.put(key, syncBlockInfoInstances(result));
+      miss(bFinder, result, "inodeid", inodeId, "version", version);
+    }
+    return result;
+  }
+
+  private List<BlockInfo> findByInodeIdAndPrevVersion(BlockInfo.Finder bFinder,
+                                        final Object[] params)
+          throws TransactionContextException, StorageException {
+    List<BlockInfo> result = null;
+    final Integer inodeId = (Integer) params[0];
+    final Byte version = (Byte) params[1];
+    final Byte lastVersion = (Byte) params[2];
+
+    aboutToAccessStorage(bFinder, params);
+    result = dataAccess.findCompleteBlocksByINodeIdAndPrevVersion(inodeId, version, lastVersion);
+    miss(bFinder, result, "inodeid", inodeId, "version", version, "lastVersion", lastVersion);
+    return syncBlockInfoInstances(result);
+  }
 
   private List<BlockInfo> findByInodeId(BlockInfo.Finder bFinder,
       final Object[] params)
