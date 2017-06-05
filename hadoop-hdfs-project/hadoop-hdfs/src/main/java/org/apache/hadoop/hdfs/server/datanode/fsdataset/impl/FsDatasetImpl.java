@@ -545,10 +545,10 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
       throw new DiskOutOfSpaceException(
           "Insufficient space for appending to " + replicaInfo);
     }
-    File newBlkFile = new File(v.getRbwDir(bpid), replicaInfo.getBlockName());
+    File newBlkFile = new File(v.getRbwDir(bpid), replicaInfo.getNextBlockName());
     File oldmeta = replicaInfo.getMetaFile();
     ReplicaBeingWritten newReplicaInfo =
-        new ReplicaBeingWritten(replicaInfo.getBlockId(),
+        new ReplicaBeingWritten(replicaInfo.getNextBlockId(),
             replicaInfo.getNumBytes(), newGS, v, newBlkFile.getParentFile(),
             Thread.currentThread());
     File newmeta = newReplicaInfo.getMetaFile();
@@ -558,7 +558,7 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
       LOG.debug("Renaming " + oldmeta + " to " + newmeta);
     }
     try {
-      NativeIO.renameTo(oldmeta, newmeta);
+      NativeIO.copyFileUnbuffered(oldmeta, newmeta);
     } catch (IOException e) {
       throw new IOException("Block " + replicaInfo + " reopen failed. " +
           " Unable to move meta file  " + oldmeta +
@@ -571,10 +571,10 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
           blkfile.length());
     }
     try {
-      NativeIO.renameTo(blkfile, newBlkFile);
+      NativeIO.copyFileUnbuffered(blkfile, newBlkFile);
     } catch (IOException e) {
       try {
-        NativeIO.renameTo(newmeta, oldmeta);
+        NativeIO.copyFileUnbuffered(newmeta, oldmeta);
       } catch (IOException ex) {
         LOG.warn("Cannot move meta file " + newmeta +
             "back to the finalized directory " + oldmeta, ex);

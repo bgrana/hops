@@ -20,6 +20,7 @@ package org.apache.hadoop.hdfs.protocol;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.hdfs.server.common.GenerationStamp;
+import org.apache.hadoop.hdfs.server.namenode.INode;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableFactories;
 import org.apache.hadoop.io.WritableFactory;
@@ -126,10 +127,24 @@ public class Block implements Writable, Comparable<Block> {
     blockId = bid;
   }
 
+  public long getNextBlockId() {
+    byte version = INode.getBlockVersion(blockId);
+    if (version < INode.MAX_VERSION - 1) {  // If last version number:
+      return blockId - version;             // Next version number 0
+    }
+    else {
+      return blockId + 1;
+    }
+  }
+
   /**
    */
   public String getBlockName() {
     return BLOCK_FILE_PREFIX + String.valueOf(blockId);
+  }
+
+  public String getNextBlockName() {
+    return BLOCK_FILE_PREFIX + String.valueOf(getNextBlockId());
   }
 
   /**

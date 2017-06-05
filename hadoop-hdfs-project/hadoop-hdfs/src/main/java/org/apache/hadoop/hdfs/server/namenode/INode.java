@@ -57,7 +57,7 @@ public abstract class INode implements Comparable<byte[]> {
   
   static final List<INode> EMPTY_LIST =
       Collections.unmodifiableList(new ArrayList<INode>());
-  static final byte MAX_VERSION = 10;
+  public static final byte MAX_VERSION = 10;
 
 
   public static enum Finder implements FinderType<INode> {
