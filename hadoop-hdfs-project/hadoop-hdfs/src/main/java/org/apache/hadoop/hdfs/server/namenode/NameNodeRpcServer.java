@@ -346,7 +346,12 @@ class NameNodeRpcServer implements NamenodeProtocols {
       throws IOException {
     namesystem.cancelDelegationToken(token);
   }
-  
+
+  @Override
+  public LocatedBlocks getBlockLocations(String src, long offset, long length) throws AccessControlException, FileNotFoundException, UnresolvedLinkException, IOException {
+    return getBlockLocations(src, offset, length, (byte)-1);
+  }
+
   @Override // ClientProtocol
   public LocatedBlocks getBlockLocations(String src, long offset, long length, byte version)
       throws IOException {

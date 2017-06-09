@@ -122,6 +122,11 @@ public class DFSInputStream extends FSInputStream
     openInfo();
   }
 
+  DFSInputStream(DFSClient dfsClient, String src, int buffersize,
+                 boolean verifyChecksum) throws IOException, UnresolvedLinkException {
+    this(dfsClient, src, buffersize, verifyChecksum, (byte)-1);
+  }
+
   /**
    * Grab the open-file info from namenode
    */
