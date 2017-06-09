@@ -1065,24 +1065,24 @@ public class DFSClient implements java.io.Closeable {
    */
   @VisibleForTesting
   public LocatedBlocks getLocatedBlocks(final String src, final long start,
-      final long length) throws IOException {
+      final long length, final byte version) throws IOException {
     ClientActionHandler handler = new ClientActionHandler() {
       @Override
       public Object doAction(ClientProtocol namenode)
           throws RemoteException, IOException {
-        return callGetBlockLocations(namenode, src, start, length);
+        return callGetBlockLocations(namenode, src, start, length, version);
       }
     };
     return (LocatedBlocks) doClientActionWithRetry(handler, "getLocatedBlocks");
   }
 
   /**
-   * @see ClientProtocol#getBlockLocations(String, long, long)
+   * @see ClientProtocol#getBlockLocations(String, long, long, byte)
    */
   static LocatedBlocks callGetBlockLocations(ClientProtocol namenode,
-      String src, long start, long length) throws IOException {
+      String src, long start, long length, byte version) throws IOException {
     try {
-      return namenode.getBlockLocations(src, start, length);
+      return namenode.getBlockLocations(src, start, length, version);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
           FileNotFoundException.class, UnresolvedPathException.class);
@@ -1191,7 +1191,7 @@ public class DFSClient implements java.io.Closeable {
    */
   public BlockLocation[] getBlockLocations(String src, long start, long length)
       throws IOException, UnresolvedLinkException {
-    LocatedBlocks blocks = getLocatedBlocks(src, start, length);
+    LocatedBlocks blocks = getLocatedBlocks(src, start, length, (byte) -1);
     BlockLocation[] locations = DFSUtil.locatedBlocks2Locations(blocks);
     HdfsBlockLocation[] hdfsLocations = new HdfsBlockLocation[locations.length];
     for (int i = 0; i < locations.length; i++) {
@@ -1272,9 +1272,9 @@ public class DFSClient implements java.io.Closeable {
     return volumeBlockLocations;
   }
   
-  public DFSInputStream open(String src)
+  public DFSInputStream open(String src, byte version)
       throws IOException, UnresolvedLinkException {
-    return open(src, dfsClientConf.ioBufferSize, true, null);
+    return open(src, dfsClientConf.ioBufferSize, true, null, version);
   }
 
   /**
@@ -1283,12 +1283,12 @@ public class DFSClient implements java.io.Closeable {
    * inner subclass of InputStream that does the right out-of-band
    * work.
    *
-   * @deprecated Use {@link #open(String, int, boolean)} instead.
+   * @deprecated Use {@link #open(String, int, boolean, byte)} instead.
    */
   @Deprecated
   public DFSInputStream open(String src, int buffersize, boolean verifyChecksum,
-      FileSystem.Statistics stats) throws IOException, UnresolvedLinkException {
-    return open(src, buffersize, verifyChecksum);
+      FileSystem.Statistics stats, byte version) throws IOException, UnresolvedLinkException {
+    return open(src, buffersize, verifyChecksum, version);
   }
   
 
@@ -1298,11 +1298,11 @@ public class DFSClient implements java.io.Closeable {
    * inner subclass of InputStream that does the right out-of-band
    * work.
    */
-  public DFSInputStream open(String src, int buffersize, boolean verifyChecksum)
+  public DFSInputStream open(String src, int buffersize, boolean verifyChecksum, byte version)
       throws IOException, UnresolvedLinkException {
     checkOpen();
     //    Get block info from namenode
-    return new DFSInputStream(this, src, buffersize, verifyChecksum);
+    return new DFSInputStream(this, src, buffersize, verifyChecksum, version);
   }
 
   /**
@@ -1999,7 +1999,7 @@ public class DFSClient implements java.io.Closeable {
       throws IOException {
     //get all block locations
     LocatedBlocks blockLocations =
-        callGetBlockLocations(namenode, src, 0, Long.MAX_VALUE);
+        callGetBlockLocations(namenode, src, 0, Long.MAX_VALUE, (byte)-1);
     if (null == blockLocations) {
       throw new FileNotFoundException("File does not exist: " + src);
     }
@@ -2015,7 +2015,7 @@ public class DFSClient implements java.io.Closeable {
     for (int i = 0; i < locatedblocks.size(); i++) {
       if (refetchBlocks) {  // refetch to get fresh tokens
         blockLocations =
-            callGetBlockLocations(namenode, src, 0, Long.MAX_VALUE);
+            callGetBlockLocations(namenode, src, 0, Long.MAX_VALUE, (byte)-1);
         if (null == blockLocations) {
           throw new FileNotFoundException("File does not exist: " + src);
         }

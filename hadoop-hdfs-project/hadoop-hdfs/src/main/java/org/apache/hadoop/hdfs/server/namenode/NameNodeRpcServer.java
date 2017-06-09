@@ -348,11 +348,11 @@ class NameNodeRpcServer implements NamenodeProtocols {
   }
   
   @Override // ClientProtocol
-  public LocatedBlocks getBlockLocations(String src, long offset, long length)
+  public LocatedBlocks getBlockLocations(String src, long offset, long length, byte version)
       throws IOException {
     metrics.incrGetBlockLocations();
     return namesystem
-        .getBlockLocations(getClientMachine(), src, offset, length);
+        .getBlockLocations(getClientMachine(), src, offset, length, version);
   }
   
   @Override // ClientProtocol

@@ -129,6 +129,43 @@ public interface ClientProtocol {
       UnresolvedLinkException, IOException;
 
   /**
+   * Get locations of the blocks of the specified file within the specified
+   * range for a given version.
+   * DataNode locations for each block are sorted by
+   * the proximity to the client.
+   * <p/>
+   * Return {@link LocatedBlocks} which contains
+   * file length, blocks and their locations.
+   * DataNode locations for each block are sorted by
+   * the distance to the client's address.
+   * <p/>
+   * The client will then have to contact
+   * one of the indicated DataNodes to obtain the actual data.
+   *
+   * @param src
+   *     file name
+   * @param offset
+   *     range start offset
+   * @param length
+   *     range length
+   * @param version
+   *     version of the blocks to be located
+   * @return file length and array of blocks with their locations
+   * @throws AccessControlException
+   *     If access is denied
+   * @throws FileNotFoundException
+   *     If file <code>src</code> does not exist
+   * @throws UnresolvedLinkException
+   *     If <code>src</code> contains a symlink
+   * @throws IOException
+   *     If an I/O error occurred
+   */
+  @Idempotent
+  public LocatedBlocks getBlockLocations(String src, long offset, long length, byte version)
+          throws AccessControlException, FileNotFoundException,
+          UnresolvedLinkException, IOException;
+
+  /**
    * Get the collection of missing or corrupted blocks for the given
    * erasure-coded file. This might not necessarily be up-to-date as it depends
    * on the block reporting when a missing or corrupted block is detected.

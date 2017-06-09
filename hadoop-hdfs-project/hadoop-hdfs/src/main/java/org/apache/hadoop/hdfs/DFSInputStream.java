@@ -69,6 +69,7 @@ public class DFSInputStream extends FSInputStream
   private boolean closed = false;
 
   private final String src;
+  private final byte version;
   private final long prefetchSize;
   private BlockReader blockReader = null;
   private final boolean verifyChecksum;
@@ -108,11 +109,12 @@ public class DFSInputStream extends FSInputStream
   }
   
   DFSInputStream(DFSClient dfsClient, String src, int buffersize,
-      boolean verifyChecksum) throws IOException, UnresolvedLinkException {
+      boolean verifyChecksum, byte version) throws IOException, UnresolvedLinkException {
     this.dfsClient = dfsClient;
     this.verifyChecksum = verifyChecksum;
     this.buffersize = buffersize;
     this.src = src;
+    this.version = version;
     this.socketCache = dfsClient.socketCache;
     prefetchSize = dfsClient.getConf().prefetchSize;
     timeWindow = dfsClient.getConf().timeWindow;
@@ -156,7 +158,7 @@ public class DFSInputStream extends FSInputStream
   }
 
   private long fetchLocatedBlocksAndGetLastBlockLength() throws IOException {
-    LocatedBlocks newInfo = dfsClient.getLocatedBlocks(src, 0, prefetchSize);
+    LocatedBlocks newInfo = dfsClient.getLocatedBlocks(src, 0, prefetchSize, version);
     if (DFSClient.LOG.isDebugEnabled()) {
       DFSClient.LOG.debug("newInfo = " + newInfo);
     }
@@ -310,7 +312,7 @@ public class DFSInputStream extends FSInputStream
         targetBlockIdx = LocatedBlocks.getInsertIndex(targetBlockIdx);
         // fetch more blocks
         LocatedBlocks newBlocks;
-        newBlocks = dfsClient.getLocatedBlocks(src, offset, prefetchSize);
+        newBlocks = dfsClient.getLocatedBlocks(src, offset, prefetchSize, version);
         assert (newBlocks != null) : "Could not find target position " + offset;
         locatedBlocks.insertRange(targetBlockIdx, newBlocks.getLocatedBlocks());
       }
@@ -336,7 +338,7 @@ public class DFSInputStream extends FSInputStream
     }
     // fetch blocks
     LocatedBlocks newBlocks;
-    newBlocks = dfsClient.getLocatedBlocks(src, offset, prefetchSize);
+    newBlocks = dfsClient.getLocatedBlocks(src, offset, prefetchSize, version);
     if (newBlocks == null) {
       throw new IOException("Could not find target position " + offset);
     }
@@ -407,7 +409,7 @@ public class DFSInputStream extends FSInputStream
       }
       if (blk == null || curOff < blk.getStartOffset()) {
         LocatedBlocks newBlocks;
-        newBlocks = dfsClient.getLocatedBlocks(src, curOff, remaining);
+        newBlocks = dfsClient.getLocatedBlocks(src, curOff, remaining, version);
         locatedBlocks.insertRange(blockIdx, newBlocks.getLocatedBlocks());
         continue;
       }

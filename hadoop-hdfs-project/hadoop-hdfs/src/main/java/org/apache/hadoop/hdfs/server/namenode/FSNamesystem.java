@@ -981,7 +981,7 @@ public class FSNamesystem
    * @see ClientProtocol#getBlockLocations(String, long, long)
    */
   LocatedBlocks getBlockLocations(final String clientMachine, final String src,
-      final long offset, final long length) throws IOException {
+      final long offset, final long length, final byte version) throws IOException {
     HopsTransactionalRequestHandler getBlockLocationsHandler =
         new HopsTransactionalRequestHandler(
             HDFSOperationType.GET_BLOCK_LOCATIONS, src) {
@@ -996,7 +996,7 @@ public class FSNamesystem
           @Override
           public Object performTask() throws StorageException, IOException {
             LocatedBlocks blocks =
-                getBlockLocationsInternal(src, offset, length, true, true,
+                getBlockLocationsInternal(src, offset, length, version, true, true,
                     true);
             if (blocks != null) {
               blockManager.getDatanodeManager()
@@ -1041,7 +1041,7 @@ public class FSNamesystem
 
           @Override
           public Object performTask() throws IOException {
-            return getBlockLocationsInternal(src, offset, length, doAccessTime,
+            return getBlockLocationsInternal(src, offset, length, (byte)-1, doAccessTime,
                 needBlockToken, checkSafeMode);
           }
         };
@@ -1055,13 +1055,13 @@ public class FSNamesystem
    *     UnresolvedLinkException, IOException
    * @see ClientProtocol#getBlockLocations(String, long, long)
    */
-  LocatedBlocks getBlockLocationsInternal(String src, long offset, long length,
+  LocatedBlocks getBlockLocationsInternal(String src, long offset, long length, byte version,
       boolean doAccessTime, boolean needBlockToken, boolean checkSafeMode)
       throws FileNotFoundException, UnresolvedLinkException, IOException,
       StorageException {
     FSPermissionChecker pc = getPermissionChecker();
     try {
-      return getBlockLocationsInt(pc, src, offset, length, doAccessTime,
+      return getBlockLocationsInt(pc, src, offset, length, version, doAccessTime,
           needBlockToken, checkSafeMode);
     } catch (AccessControlException e) {
       logAuditEvent(false, "open", src);
@@ -1071,7 +1071,7 @@ public class FSNamesystem
 
   public boolean isFileCorrupt(final String filePath) throws IOException {
     LocatedBlocks blocks =
-        getBlockLocationsInternal(filePath, 0, Long.MAX_VALUE, true, true,
+        getBlockLocationsInternal(filePath, 0, Long.MAX_VALUE, (byte)-1, true, true,
             true);
     for (LocatedBlock b : blocks.getLocatedBlocks()) {
       if (b.isCorrupt() ||
@@ -1083,7 +1083,7 @@ public class FSNamesystem
   }
 
   private LocatedBlocks getBlockLocationsInt(FSPermissionChecker pc, String src,
-      long offset, long length, boolean doAccessTime, boolean needBlockToken,
+      long offset, long length, byte version, boolean doAccessTime, boolean needBlockToken,
       boolean checkSafeMode)
       throws FileNotFoundException, UnresolvedLinkException, IOException,
       StorageException {
@@ -1100,7 +1100,7 @@ public class FSNamesystem
           "Negative length is not supported. File: " + src);
     }
     final LocatedBlocks ret =
-        getBlockLocationsUpdateTimes(src, offset, length, doAccessTime,
+        getBlockLocationsUpdateTimes(src, offset, length, version, doAccessTime,
             needBlockToken);
     logAuditEvent(true, "open", src);
     if (checkSafeMode && isInSafeMode()) {
@@ -1120,7 +1120,7 @@ public class FSNamesystem
    * access times if necessary. 
    */
   private LocatedBlocks getBlockLocationsUpdateTimes(String src, long offset,
-      long length, boolean doAccessTime, boolean needBlockToken)
+      long length, byte version, boolean doAccessTime, boolean needBlockToken)
       throws FileNotFoundException, UnresolvedLinkException, IOException,
       StorageException {
 
@@ -1143,7 +1143,7 @@ public class FSNamesystem
         dir.setTimes(src, inode, -1, now, false);
       }
       return blockManager
-          .createLocatedBlocks(inode.getBlocks(), inode.computeFileSize(false),
+          .createLocatedBlocks(inode.getBlocks(version), inode.computeFileSize(false),
               inode.isUnderConstruction(), offset, length, needBlockToken);
     }
     return null; // can never reach here
@@ -6894,7 +6894,7 @@ private void commitOrCompleteLastBlock(
       UnresolvedLinkException, IOException {
 
     LocatedBlocks blocks =
-        getBlockLocations(clientMachine, filePath, 0, Long.MAX_VALUE);
+        getBlockLocations(clientMachine, filePath, 0, Long.MAX_VALUE, (byte)-1);
     Iterator<LocatedBlock> iterator = blocks.getLocatedBlocks().iterator();
     while (iterator.hasNext()) {
       LocatedBlock b = iterator.next();
@@ -7246,11 +7246,11 @@ private void commitOrCompleteLastBlock(
 
     ArrayList<LocatedBlock> sourceLocations =
         new ArrayList(getBlockLocations(clientMachine, sourcePath, 0,
-            Long.MAX_VALUE).getLocatedBlocks());
+            Long.MAX_VALUE, (byte)-1).getLocatedBlocks());
     Collections.sort(sourceLocations, LocatedBlock.blockIdComparator);
     ArrayList<LocatedBlock> parityLocations =
         new ArrayList(getBlockLocations(clientMachine, parityPath, 0,
-            Long.MAX_VALUE).getLocatedBlocks());
+            Long.MAX_VALUE, (byte)-1).getLocatedBlocks());
     Collections.sort(parityLocations, LocatedBlock.blockIdComparator);
 
     HashMap<Node, Node> excluded = new HashMap<Node, Node>();
