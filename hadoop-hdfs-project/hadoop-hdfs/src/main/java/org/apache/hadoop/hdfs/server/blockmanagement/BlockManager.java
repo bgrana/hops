@@ -717,12 +717,12 @@ public class BlockManager {
     assert oldBlock ==
         getStoredBlock(oldBlock) : "last block of the file is not in blocksMap";
 
-    // Clone the BlockInfo of the last block. It creates a new row in the DB
+    // Clone the BlockInfo of the last block.
     BlockInfo clonedLastBlock = BlockInfo.cloneBlock(oldBlock);
     // Set version of the new last block to the last file version so it changes
-    // later the version of the newBlockInfo when saving it to the DB
-    clonedLastBlock.setBlockIdNoPersistance(
-            ((INodeFile) bc).getLastVersion() + IDsGeneratorFactory.getInstance().getUniqueBlockID());
+    // later the version of the newBlockInfo when saving it to the DB.
+    // This creates a new row in the DB for the new version of the block.
+    clonedLastBlock.setBlockId(oldBlock.getNextBlockId());
 
     DatanodeDescriptor[] targets = getNodes(clonedLastBlock);
 
