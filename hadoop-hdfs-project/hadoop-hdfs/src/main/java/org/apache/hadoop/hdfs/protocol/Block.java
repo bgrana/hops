@@ -137,6 +137,16 @@ public class Block implements Writable, Comparable<Block> {
     }
   }
 
+  public long getPrevBlockId() {
+    byte version = INode.getBlockVersion(blockId);
+    if (version == 0) {
+      return blockId + INode.MAX_VERSION-1;
+    }
+    else {
+      return blockId - 1;
+    }
+  }
+
   /**
    */
   public String getBlockName() {

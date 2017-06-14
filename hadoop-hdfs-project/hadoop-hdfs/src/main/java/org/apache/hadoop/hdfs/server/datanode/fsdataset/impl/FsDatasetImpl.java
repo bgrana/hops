@@ -535,9 +535,11 @@ class FsDatasetImpl implements FsDatasetSpi<FsVolumeImpl> {
   private synchronized ReplicaBeingWritten append(String bpid,
       FinalizedReplica replicaInfo, long newGS, long estimateBlockLen)
       throws IOException {
+    // set replicaInfo to the old version to copy it to the new one
+    replicaInfo.setBlockIdNoPersistance(replicaInfo.getPrevBlockId());
     // unlink the finalized replica
     replicaInfo.unlinkBlock(1);
-    
+
     // construct a RBW replica with the new GS
     File blkfile = replicaInfo.getBlockFile();
     FsVolumeImpl v = (FsVolumeImpl) replicaInfo.getVolume();
