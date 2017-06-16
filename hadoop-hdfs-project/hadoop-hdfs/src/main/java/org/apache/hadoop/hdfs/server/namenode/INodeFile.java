@@ -370,14 +370,14 @@ public class INodeFile extends INode implements BlockCollection {
    * @throws TransactionContextException
    */
   public void removeOldBlocks() throws StorageException, TransactionContextException {
-    BlockInfo[] blocks = getBlocks();
+
+    // Version to delete is always (lastVersion + 1) % MAX_AUTO_VERSION.
+    BlockInfo[] blocks = getBlocks((lastVersion + 1) % MAX_AUTO_VERSION);
     for (BlockInfo block : blocks) {
 
-      // Version to delete is always (lastVersion + 1) % MAX_AUTO_VERSION.
       // If a block with this version is fully-written, change its version
-      // to MAX_AUTO_VERSION+1 and keep it.
-      if (block.getNumBytes() == getPreferredBlockSize() &&
-              block.getBlockVersion() == (lastVersion + 1) % MAX_AUTO_VERSION){
+      // to MAX_AUTO_VERSION + 1 and keep it.
+      if (block.getNumBytes() == getPreferredBlockSize()){
         block.setBlockVersion(MAX_AUTO_VERSION + 1);
       } else {
         block.removeIfVersion((lastVersion + 1) % MAX_AUTO_VERSION);
