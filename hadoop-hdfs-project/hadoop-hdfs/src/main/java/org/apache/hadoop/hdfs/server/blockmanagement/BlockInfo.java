@@ -375,11 +375,11 @@ public class BlockInfo extends Block {
     save();
   }
 
-  public byte getBlockVersion() {
-    return (byte) (getBlockId() & INode.BLOCK_VERSION_MASK);
+  public int getBlockVersion() {
+    return (int) (getBlockId() & INode.BLOCK_VERSION_MASK);
   }
 
-  public void setBlockVersion(byte version)
+  public void setBlockVersion(int version)
           throws StorageException, TransactionContextException {
     setBlockId((getBlockId() & ~INode.BLOCK_VERSION_MASK) | version);
   }

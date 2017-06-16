@@ -981,7 +981,7 @@ public class FSNamesystem
    * @see ClientProtocol#getBlockLocations(String, long, long)
    */
   LocatedBlocks getBlockLocations(final String clientMachine, final String src,
-      final long offset, final long length, final byte version) throws IOException {
+      final long offset, final long length, final int version) throws IOException {
     HopsTransactionalRequestHandler getBlockLocationsHandler =
         new HopsTransactionalRequestHandler(
             HDFSOperationType.GET_BLOCK_LOCATIONS, src) {
@@ -1041,7 +1041,7 @@ public class FSNamesystem
 
           @Override
           public Object performTask() throws IOException {
-            return getBlockLocationsInternal(src, offset, length, (byte)-1, doAccessTime,
+            return getBlockLocationsInternal(src, offset, length, -1, doAccessTime,
                 needBlockToken, checkSafeMode);
           }
         };
@@ -1055,7 +1055,7 @@ public class FSNamesystem
    *     UnresolvedLinkException, IOException
    * @see ClientProtocol#getBlockLocations(String, long, long)
    */
-  LocatedBlocks getBlockLocationsInternal(String src, long offset, long length, byte version,
+  LocatedBlocks getBlockLocationsInternal(String src, long offset, long length, int version,
       boolean doAccessTime, boolean needBlockToken, boolean checkSafeMode)
       throws FileNotFoundException, UnresolvedLinkException, IOException,
       StorageException {
@@ -1071,7 +1071,7 @@ public class FSNamesystem
 
   public boolean isFileCorrupt(final String filePath) throws IOException {
     LocatedBlocks blocks =
-        getBlockLocationsInternal(filePath, 0, Long.MAX_VALUE, (byte)-1, true, true,
+        getBlockLocationsInternal(filePath, 0, Long.MAX_VALUE, -1, true, true,
             true);
     for (LocatedBlock b : blocks.getLocatedBlocks()) {
       if (b.isCorrupt() ||
@@ -1083,7 +1083,7 @@ public class FSNamesystem
   }
 
   private LocatedBlocks getBlockLocationsInt(FSPermissionChecker pc, String src,
-      long offset, long length, byte version, boolean doAccessTime, boolean needBlockToken,
+      long offset, long length, int version, boolean doAccessTime, boolean needBlockToken,
       boolean checkSafeMode)
       throws FileNotFoundException, UnresolvedLinkException, IOException,
       StorageException {
@@ -1120,7 +1120,7 @@ public class FSNamesystem
    * access times if necessary. 
    */
   private LocatedBlocks getBlockLocationsUpdateTimes(String src, long offset,
-      long length, byte version, boolean doAccessTime, boolean needBlockToken)
+      long length, int version, boolean doAccessTime, boolean needBlockToken)
       throws FileNotFoundException, UnresolvedLinkException, IOException,
       StorageException {
 
@@ -1842,7 +1842,7 @@ public class FSNamesystem
     leaseManager.addLease(cons.getClientName(), src);
 
     // Remove old blocks unless they are complete in which case their version is
-    // changed to MAX_VERSION + 1
+    // changed to MAX_AUTO_VERSION + 1
     cons.removeOldBlocks();
     // Increase file last version before committing any new blocks
     cons.increaseLastVersion();
@@ -6894,7 +6894,7 @@ private void commitOrCompleteLastBlock(
       UnresolvedLinkException, IOException {
 
     LocatedBlocks blocks =
-        getBlockLocations(clientMachine, filePath, 0, Long.MAX_VALUE, (byte)-1);
+        getBlockLocations(clientMachine, filePath, 0, Long.MAX_VALUE, -1);
     Iterator<LocatedBlock> iterator = blocks.getLocatedBlocks().iterator();
     while (iterator.hasNext()) {
       LocatedBlock b = iterator.next();
@@ -7246,11 +7246,11 @@ private void commitOrCompleteLastBlock(
 
     ArrayList<LocatedBlock> sourceLocations =
         new ArrayList(getBlockLocations(clientMachine, sourcePath, 0,
-            Long.MAX_VALUE, (byte)-1).getLocatedBlocks());
+            Long.MAX_VALUE, -1).getLocatedBlocks());
     Collections.sort(sourceLocations, LocatedBlock.blockIdComparator);
     ArrayList<LocatedBlock> parityLocations =
         new ArrayList(getBlockLocations(clientMachine, parityPath, 0,
-            Long.MAX_VALUE, (byte)-1).getLocatedBlocks());
+            Long.MAX_VALUE, -1).getLocatedBlocks());
     Collections.sort(parityLocations, LocatedBlock.blockIdComparator);
 
     HashMap<Node, Node> excluded = new HashMap<Node, Node>();

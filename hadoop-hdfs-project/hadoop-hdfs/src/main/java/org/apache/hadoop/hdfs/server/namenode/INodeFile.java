@@ -105,7 +105,7 @@ public class INodeFile extends INode implements BlockCollection {
    * @return the blocks of the file for a given version.
    */
   @Override
-  public BlockInfo[] getBlocks(byte version)
+  public BlockInfo[] getBlocks(int version)
           throws StorageException, TransactionContextException {
     if (getId() == INode.NON_EXISTING_ID) {
       return BlockInfo.EMPTY_ARRAY;
@@ -366,12 +366,12 @@ public class INodeFile extends INode implements BlockCollection {
     BlockInfo[] blocks = getBlocks();
     for (BlockInfo block : blocks) {
 
-      // Version to delete is always (lastVersion + 1) % MAX_VERSION unless the block with that version is complete,
+      // Version to delete is always (lastVersion + 1) % MAX_AUTO_VERSION unless the block with that version is complete,
       // in which case we change its version to 0 and keep it
-      if (block.getNumBytes() == getPreferredBlockSize() && block.getBlockVersion() == (lastVersion + 1) % MAX_VERSION){
-        block.setBlockVersion((byte) (MAX_VERSION + 1));
+      if (block.getNumBytes() == getPreferredBlockSize() && block.getBlockVersion() == (lastVersion + 1) % MAX_AUTO_VERSION){
+        block.setBlockVersion(MAX_AUTO_VERSION + 1);
       } else {
-        block.removeIfVersion((lastVersion + 1) % MAX_VERSION);
+        block.removeIfVersion((lastVersion + 1) % MAX_AUTO_VERSION);
       }
     }
   }

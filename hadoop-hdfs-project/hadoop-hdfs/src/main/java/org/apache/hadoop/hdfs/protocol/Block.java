@@ -128,8 +128,8 @@ public class Block implements Writable, Comparable<Block> {
   }
 
   public long getNextBlockId() {
-    byte version = INode.getBlockVersion(blockId);
-    if (version < INode.MAX_VERSION - 1) {  // If last version number:
+    int version = INode.getBlockVersion(blockId);
+    if (version < INode.MAX_AUTO_VERSION - 1) {  // If last version number:
       return blockId - version;             // Next version number 0
     }
     else {
@@ -138,9 +138,9 @@ public class Block implements Writable, Comparable<Block> {
   }
 
   public long getPrevBlockId() {
-    byte version = INode.getBlockVersion(blockId);
+    int version = INode.getBlockVersion(blockId);
     if (version == 0) {
-      return blockId + INode.MAX_VERSION-1;
+      return blockId + INode.MAX_AUTO_VERSION -1;
     }
     else {
       return blockId - 1;

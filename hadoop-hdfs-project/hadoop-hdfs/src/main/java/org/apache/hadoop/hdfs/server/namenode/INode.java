@@ -57,8 +57,21 @@ public abstract class INode implements Comparable<byte[]> {
   
   static final List<INode> EMPTY_LIST =
       Collections.unmodifiableList(new ArrayList<INode>());
-  public static final byte MAX_VERSION = 10;
 
+  // Version numbers must all be in the range of an unsigned
+  // byte [0-256). There are two types of versions: automatic,
+  // used in automatic snapshots on file change, and on-demand,
+  // used for on-demand snapshots requested byt the user.
+
+  // Automatic version max number is between 0 and 170
+  public static final int MAX_AUTO_VERSION = 10;
+
+  // On-demand version numbers must be in the range [172,256).
+  // Old completed blocks are always stored as (MAX_AUTO_VERSION+1)
+  // so version 171 is reserved for the case in which
+  // MAX_AUTO_VERSION = 170
+  public static final int MIN_ON_DEMAN_VERSION = 172;
+  public static final int MAX_ON_DEMAND_VERSION = 182;
 
   public static enum Finder implements FinderType<INode> {
 
@@ -130,7 +143,7 @@ public abstract class INode implements Comparable<byte[]> {
   protected INodeDirectory parent;
   protected long modificationTime;
   protected long accessTime;
-  protected byte lastVersion;
+  protected int lastVersion;
   
 
   public static final int NON_EXISTING_ID = 0;
@@ -895,8 +908,8 @@ public abstract class INode implements Comparable<byte[]> {
     header = (header & ~BLOCK_SIZE_MASK) | (preferredBlkSize & BLOCK_SIZE_MASK);
   }
 
-  public static byte getBlockVersion(long header) {
-    return (byte) (header & BLOCK_VERSION_MASK);
+  public static int getBlockVersion(long header) {
+    return (int) (header & BLOCK_VERSION_MASK);
   }
 
   public long getHeader() {
@@ -906,7 +919,7 @@ public abstract class INode implements Comparable<byte[]> {
   public void setHeaderNoPersistance(long header) {
     long preferecBlkSize = getPreferredBlockSize(header);
     short replication = getBlockReplication(header);
-    byte version = getBlockVersion(header);
+    int version = getBlockVersion(header);
 
     if (preferecBlkSize < 0) {
       throw new IllegalArgumentException("Unexpected value for the " +
@@ -918,8 +931,8 @@ public abstract class INode implements Comparable<byte[]> {
           "replication [" + replication + "]");
     }
 
-    // MAX_VERSION + 1 is a special version for old completed blocks
-    if (version < 0 || version > (MAX_VERSION + 1)) {
+    // MAX_AUTO_VERSION + 1 is a special version for old completed blocks
+    if (version < 0 || version > (MAX_AUTO_VERSION + 1)) {
       throw new IllegalArgumentException("Unexpected value for the " +
               "version [" + version + "]");
     }
@@ -966,28 +979,28 @@ public abstract class INode implements Comparable<byte[]> {
     return (short) (parentInode.myDepth()+1);
   }
 
-  public byte getLastVersion() {
+  public int getLastVersion() {
     return lastVersion;
   }
 
-  public void setLastVersionNoPersistance(byte version) {
-    if (version > MAX_VERSION || version < 0) {
-      throw new IllegalArgumentException("Version number must be between 0 and " + MAX_VERSION);
+  public void setLastVersionNoPersistance(int version) {
+    if (version > MAX_AUTO_VERSION || version < 0) {
+      throw new IllegalArgumentException("Version number must be between 0 and " + MAX_AUTO_VERSION);
     }
     this.lastVersion = version;
   }
 
-  public void setLastVersion(byte lastVersion) throws TransactionContextException, StorageException {
+  public void setLastVersion(int lastVersion) throws TransactionContextException, StorageException {
     setLastVersionNoPersistance(lastVersion);
     save();
   }
 
   public void increaseLastVersion() throws TransactionContextException, StorageException {
-    if (lastVersion == MAX_VERSION - 1) {
+    if (lastVersion == MAX_AUTO_VERSION - 1) {
       // Version 0 reserved for old completed blocks
-      this.setLastVersion((byte) 0);
+      this.setLastVersion(0);
     } else {
-      this.setLastVersion((byte) (this.lastVersion + 1));
+      this.setLastVersion(this.lastVersion + 1);
     }
   }
 }

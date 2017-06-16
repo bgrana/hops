@@ -49,7 +49,7 @@ public interface BlockCollection {
   /**
    * Get the blocks for a given version.
    */
-  public BlockInfo[] getBlocks(byte version)
+  public BlockInfo[] getBlocks(int version)
       throws StorageException, TransactionContextException;
 
   /**

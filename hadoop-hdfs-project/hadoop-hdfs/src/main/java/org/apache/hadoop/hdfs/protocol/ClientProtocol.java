@@ -161,7 +161,7 @@ public interface ClientProtocol {
    *     If an I/O error occurred
    */
   @Idempotent
-  public LocatedBlocks getBlockLocations(String src, long offset, long length, byte version)
+  public LocatedBlocks getBlockLocations(String src, long offset, long length, int version)
           throws AccessControlException, FileNotFoundException,
           UnresolvedLinkException, IOException;
 
@@ -297,7 +297,6 @@ public interface ClientProtocol {
       FileNotFoundException, NSQuotaExceededException,
       ParentNotDirectoryException, SafeModeException, UnresolvedLinkException,
       IOException;
-
   /**
    * Create a new file entry in the namespace.
    * <p/>
@@ -368,7 +367,6 @@ public interface ClientProtocol {
       FileNotFoundException, NSQuotaExceededException,
       ParentNotDirectoryException, SafeModeException, UnresolvedLinkException,
       IOException;
-
   /**
    * Append to the end of the file.
    *
