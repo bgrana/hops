@@ -361,14 +361,23 @@ public class INodeFile extends INode implements BlockCollection {
     save();
   }
 
-  // Use BEFORE incrementing file last version when openning for append
+  /**
+   * Remove blocks with the oldest version unless they are complete.
+   * Use BEFORE incrementing file last version when opening for append.
+   * This method does not affect on-demand versions.
+   *
+   * @throws StorageException
+   * @throws TransactionContextException
+   */
   public void removeOldBlocks() throws StorageException, TransactionContextException {
     BlockInfo[] blocks = getBlocks();
     for (BlockInfo block : blocks) {
 
-      // Version to delete is always (lastVersion + 1) % MAX_AUTO_VERSION unless the block with that version is complete,
-      // in which case we change its version to 0 and keep it
-      if (block.getNumBytes() == getPreferredBlockSize() && block.getBlockVersion() == (lastVersion + 1) % MAX_AUTO_VERSION){
+      // Version to delete is always (lastVersion + 1) % MAX_AUTO_VERSION.
+      // If a block with this version is fully-written, change its version
+      // to MAX_AUTO_VERSION+1 and keep it.
+      if (block.getNumBytes() == getPreferredBlockSize() &&
+              block.getBlockVersion() == (lastVersion + 1) % MAX_AUTO_VERSION){
         block.setBlockVersion(MAX_AUTO_VERSION + 1);
       } else {
         block.removeIfVersion((lastVersion + 1) % MAX_AUTO_VERSION);
