@@ -375,12 +375,14 @@ public class INodeFile extends INode implements BlockCollection {
     BlockInfo[] blocks = getBlocks((lastVersion + 1) % MAX_AUTO_VERSION);
     for (BlockInfo block : blocks) {
 
-      // If a block with this version is fully-written, change its version
-      // to MAX_AUTO_VERSION + 1 and keep it.
-      if (block.getNumBytes() == getPreferredBlockSize()){
-        block.setBlockVersion(MAX_AUTO_VERSION + 1);
-      } else {
-        block.removeIfVersion((lastVersion + 1) % MAX_AUTO_VERSION);
+      if (!block.isOldBlock()) {
+        // If a block with this version is fully-written, set isOldBlock = true
+        // This way the block is kept without having to change its version
+        if (block.getNumBytes() == getPreferredBlockSize()){
+          block.setOldBlock(true);
+        } else {
+          block.removeIfVersion((lastVersion + 1) % MAX_AUTO_VERSION);
+        }
       }
     }
   }

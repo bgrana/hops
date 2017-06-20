@@ -63,18 +63,12 @@ public abstract class INode implements Comparable<byte[]> {
   // used in automatic snapshots on file change, and on-demand,
   // used for on-demand snapshots requested byt the user.
 
-  // Automatic version numbers must be in the range [0,170].
-  // Old completed blocks with an automatic snapshot version
-  // are always stored as (MAX_AUTO_VERSION+1),
-  // so version 171 is reserved for the corner-case
-  // MAX_AUTO_VERSION = 170
+  // Automatic version numbers must be in the range [0,171]
   public static final int MAX_AUTO_VERSION = 10;
 
-  // On-demand version numbers must be in the range [172,254].
-  // Old completed blocks with an on-demand snapshot version
-  // are always stored as (MAX_ON_DEMAND_VERSION+1),
-  // so version 255 is reserved for the corner-case
-  // MAX_ON_DEMAND_VERSION = 254
+  // On-demand version numbers must be in the range [172,255]
+  // This constants delimit the lower and upper bounds for
+  // on-demand snapshots version numbers
   public static final int MIN_ON_DEMAN_VERSION = 172;
   public static final int MAX_ON_DEMAND_VERSION = 182;
 

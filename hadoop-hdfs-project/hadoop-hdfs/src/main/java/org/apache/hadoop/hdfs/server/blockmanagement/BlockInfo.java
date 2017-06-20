@@ -145,6 +145,7 @@ public class BlockInfo extends Block {
   private BlockCollection bc;
   private int blockIndex = -1;
   private long timestamp = 1;
+  private boolean isOldBlock = false;
   
   protected int inodeId = INode.NON_EXISTING_ID;
   
@@ -384,6 +385,20 @@ public class BlockInfo extends Block {
     setBlockId((getBlockId() & ~INode.BLOCK_VERSION_MASK) | version);
   }
 
+  public boolean isOldBlock() {
+    return isOldBlock;
+  }
+
+  public void setOldBlockNoPersistance(boolean isOldBlock) {
+    this.isOldBlock = isOldBlock;
+  }
+
+  public void setOldBlock(boolean isOldBlock)
+          throws StorageException, TransactionContextException {
+    setOldBlockNoPersistance(isOldBlock);
+    save();
+  }
+
   protected DatanodeDescriptor[] getDatanodes(DatanodeManager datanodeMgr,
       List<? extends ReplicaBase> replicas) {
     int numLocations = replicas.size();
@@ -489,7 +504,7 @@ public class BlockInfo extends Block {
   }
 
   public void removeIfVersion(int version) throws StorageException, TransactionContextException {
-    if (getBlockVersion() == version) {
+    if (getBlockVersion() == version && !isOldBlock) {
       remove();
     }
   }
