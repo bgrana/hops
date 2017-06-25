@@ -503,8 +503,8 @@ public class BlockInfo extends Block {
     }
   }
 
-  public void removeIfVersion(int version) throws StorageException, TransactionContextException {
-    if (getBlockVersion() == version && !isOldBlock) {
+  public void removeIfNotOld() throws StorageException, TransactionContextException {
+    if (!isOldBlock) {
       remove();
     }
   }

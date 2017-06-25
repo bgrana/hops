@@ -383,7 +383,7 @@ public class INodeFile extends INode implements BlockCollection {
         if (block.getNumBytes() == getPreferredBlockSize()){
           block.setOldBlock(true);
         } else {
-          block.removeIfVersion((lastVersion + 1) % MAX_AUTO_VERSION);
+          block.removeIfNotOld();
         }
       }
     }
