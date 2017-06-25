@@ -1381,4 +1381,19 @@ public interface ClientProtocol {
   public LocatedBlock getRepairedBlockLocations(String sourcePath,
       String parityPath, LocatedBlock block, boolean isParity)
       throws IOException;
+
+  /**
+   * Rollback to a previous state of the file invalidating all
+   * versions between that state and the last one
+   *
+   * @param src
+   *    path of the file to rollback
+   * @param version
+   *    the version to rollback to
+   * @param clientName
+   *    name of the current client
+   * @throws IOException
+   */
+  public void rollback(String src, int version, String clientName)
+    throws IOException;
 }

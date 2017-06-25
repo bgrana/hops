@@ -18,13 +18,13 @@
 package org.apache.hadoop.hdfs.server.namenode;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import io.hops.common.IDsGeneratorFactory;
 import io.hops.common.IDsMonitor;
 import io.hops.common.INodeUtil;
 import io.hops.erasure_coding.Codec;
 import io.hops.erasure_coding.ErasureCodingManager;
+import io.hops.exception.HopsException;
 import io.hops.exception.StorageCallPreventedException;
 import io.hops.exception.StorageException;
 import io.hops.exception.TransactionContextException;
@@ -35,7 +35,6 @@ import io.hops.metadata.hdfs.dal.BlockChecksumDataAccess;
 import io.hops.metadata.hdfs.dal.EncodingStatusDataAccess;
 import io.hops.metadata.hdfs.dal.INodeAttributesDataAccess;
 import io.hops.metadata.hdfs.dal.INodeDataAccess;
-import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
 import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
 import io.hops.metadata.hdfs.dal.SizeLogDataAccess;
 import io.hops.metadata.hdfs.entity.BlockChecksum;
@@ -144,17 +143,11 @@ import org.mortbay.util.ajax.JSON;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 import javax.management.StandardMBean;
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -2485,6 +2478,71 @@ public class FSNamesystem
     NameNode.stateChangeLog
         .info("DIR* completeFile: " + src + " is closed by " + holder);
     return true;
+  }
+
+  /**
+   * Rollback to a previous state of the file invalidating all
+   * versions between that state and the last one
+   *
+   * @param src
+   *    path of the file to rollback
+   * @param version
+   *    the version to rollback to
+   * @param holder
+   *    name of the current client
+   * @throws IOException
+   */
+  void rollback(final String src, final int version, final String holder) throws IOException {
+    new HopsTransactionalRequestHandler(HDFSOperationType.ROLLBACK, src) {
+      @Override
+      public void acquireLock(TransactionLocks locks) throws IOException { // TODO: Check required locks
+        LockFactory lf = getInstance();
+        locks.add(lf.getINodeLock(!dir.isQuotaEnabled()?true:false/*skip Inode Atrr*/, nameNode, INodeLockType.WRITE,
+                INodeResolveType.PATH, src))
+                .add(lf.getLeaseLock(LockType.READ, holder))
+                .add(lf.getLeasePathLock(LockType.READ_COMMITTED)).add(lf.getBlockLock())
+                .add(lf.getBlockRelated(BLK.RE, BLK.CR, BLK.ER, BLK.UC, BLK.UR,
+                        BLK.IV));
+      }
+
+      @Override
+      public Object performTask() throws IOException {
+
+        if (version > INode.MAX_AUTO_VERSION || version < INode.MIN_AUTO_VERSION) {
+          throw new HopsException("Rollback is only available for automatic versions.\n"
+                  + "Please try again with a version between " + INode.MIN_AUTO_VERSION
+                  + " and " + INode.MAX_AUTO_VERSION + ".");
+        }
+        // Check file leases
+        INodeFile pendingFile;
+        try {
+          pendingFile = checkLease(src, holder);
+        } catch (LeaseExpiredException lee) {
+          throw lee;
+        }
+
+        if (version == pendingFile.getLastVersion()) {
+          return null; // Rollback to lastVersion... do nothing
+        }
+
+        // Get all blocks
+        // TODO: Make new query to find all blocks of versions newer than the given one that are not marked as 'oldBlock'
+        BlockInfo[] blocks = pendingFile.getBlocks();
+
+        // Delete blocks between 'version' and 'lastVersion'
+        for(BlockInfo bi : blocks) {
+          if (bi.getBlockVersion() > version &&
+                  bi.getBlockVersion() <= pendingFile.getLastVersion()) {
+            bi.removeIfNotOld();
+          }
+        }
+
+        // Set lastVersion to the given version
+        pendingFile.setLastVersion(version);
+
+        return null; // TODO: set 'version' as lastVersion and remove all subsequent versions
+      }
+    }.handle(this);
   }
 
   /**

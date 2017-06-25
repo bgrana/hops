@@ -1091,4 +1091,9 @@ class NameNodeRpcServer implements NamenodeProtocols {
     return namesystem.getRepairedBlockLocations(getClientMachine(), sourcePath,
         parityPath, block, isParity);
   }
+
+  @Override
+  public void rollback(String src, int version, String clientName) throws IOException {
+    namesystem.rollback(src, version, clientName);
+  }
 }
