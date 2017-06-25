@@ -1841,11 +1841,10 @@ public class FSNamesystem
         file.convertToUnderConstruction(leaseHolder, clientMachine, clientNode);
     leaseManager.addLease(cons.getClientName(), src);
 
-    // Remove old blocks unless they are complete in which case their version is
-    // changed to MAX_AUTO_VERSION + 1
-    cons.removeOldBlocks();
     // Increase file last version before committing any new blocks
     cons.increaseLastVersion();
+    // Remove old blocks unless they are complete
+    cons.removeObsoleteBlocks(false);
     LocatedBlock ret = blockManager.convertLastBlockToUnderConstruction(cons);
 
     return ret;

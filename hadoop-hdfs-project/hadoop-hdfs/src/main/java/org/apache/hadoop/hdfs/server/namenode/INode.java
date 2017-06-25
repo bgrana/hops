@@ -59,17 +59,20 @@ public abstract class INode implements Comparable<byte[]> {
       Collections.unmodifiableList(new ArrayList<INode>());
 
   // Version numbers must all be in the range of an unsigned
-  // byte [0-256). There are two types of versions: automatic,
+  // byte [0-255]. There are two types of versions: automatic,
   // used in automatic snapshots on file change, and on-demand,
   // used for on-demand snapshots requested byt the user.
 
   // Automatic version numbers must be in the range [0,171]
+  // This constant delimits the upper (inclusive) bound for
+  // automatic version numbers
+  public static final int MIN_AUTO_VERSION = 0;
   public static final int MAX_AUTO_VERSION = 10;
 
   // On-demand version numbers must be in the range [172,255]
-  // This constants delimit the lower and upper bounds for
-  // on-demand snapshots version numbers
-  public static final int MIN_ON_DEMAN_VERSION = 172;
+  // These constants delimit the lower and upper (inclusive)
+  // bounds for on-demand snapshots version numbers
+  public static final int MIN_ON_DEMAND_VERSION = 172;
   public static final int MAX_ON_DEMAND_VERSION = 182;
 
   public static enum Finder implements FinderType<INode> {
@@ -930,8 +933,7 @@ public abstract class INode implements Comparable<byte[]> {
           "replication [" + replication + "]");
     }
 
-    // MAX_AUTO_VERSION + 1 is a special version for old completed blocks
-    if (version < 0 || version > (MAX_AUTO_VERSION + 1)) {
+    if (version < MIN_AUTO_VERSION || version > MAX_AUTO_VERSION) {
       throw new IllegalArgumentException("Unexpected value for the " +
               "version [" + version + "]");
     }
@@ -983,20 +985,21 @@ public abstract class INode implements Comparable<byte[]> {
   }
 
   public void setLastVersionNoPersistance(int version) {
-    if (version > MAX_AUTO_VERSION || version < 0) {
+    if (version > MAX_AUTO_VERSION || version < MIN_AUTO_VERSION) {
       throw new IllegalArgumentException("Version number must be between 0 and " + MAX_AUTO_VERSION);
     }
     this.lastVersion = version;
   }
 
-  public void setLastVersion(int lastVersion) throws TransactionContextException, StorageException {
+  public void setLastVersion(int lastVersion)
+          throws TransactionContextException, StorageException {
     setLastVersionNoPersistance(lastVersion);
     save();
   }
 
-  public void increaseLastVersion() throws TransactionContextException, StorageException {
-    if (lastVersion == MAX_AUTO_VERSION - 1) {
-      // Version 0 reserved for old completed blocks
+  public void increaseLastVersion()
+          throws TransactionContextException, StorageException {
+    if (lastVersion == MAX_AUTO_VERSION) {
       this.setLastVersion(0);
     } else {
       this.setLastVersion(this.lastVersion + 1);
