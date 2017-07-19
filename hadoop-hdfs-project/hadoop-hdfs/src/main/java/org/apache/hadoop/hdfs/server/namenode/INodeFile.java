@@ -181,25 +181,6 @@ public class INodeFile extends INode implements BlockCollection {
     }
   }
 
-  public BlockInfo[] getBlocksWithVersion(int version)
-          throws StorageException, TransactionContextException {
-    if (getId() == INode.NON_EXISTING_ID) {
-      return BlockInfo.EMPTY_ARRAY;
-    }
-
-    // Blocks of the given version
-    List<BlockInfo> blocks = (List<BlockInfo>) EntityManager
-            .findList(BlockInfo.Finder.ByINodeIdAndVersion,id, version, false);
-
-    if (blocks != null) {
-      Collections.sort(blocks, BlockInfo.Order.ByBlockIndex);
-      BlockInfo[] blks = new BlockInfo[blocks.size()];
-      return blocks.toArray(blks);
-    } else {
-      return BlockInfo.EMPTY_ARRAY;
-    }
-  }
-
   public Set<Integer> getOnDemandVersions()
           throws StorageException, TransactionContextException {
     if (getId() == INode.NON_EXISTING_ID) {
