@@ -2585,7 +2585,7 @@ public class FSNamesystem
         // Set lastVersion to the given version
         pendingFile.setLastVersion(version);
 
-        return null; // TODO: set 'version' as lastVersion and remove all subsequent versions
+        return null;
       }
     }.handle(this);
   }
