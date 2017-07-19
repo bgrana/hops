@@ -176,7 +176,8 @@ public class BlockInfoContext extends BaseEntityContext<Long, BlockInfo> {
           throws TransactionContextException, StorageException {
     List<BlockInfo> result = null;
     final Integer inodeId = (Integer) params[0];
-    final Byte version = (Byte) params[1];
+    final Integer version = (Integer) params[1];
+    final Boolean onlyOnDemand = (Boolean) params[2];
     Pair key = new Pair(inodeId, version);
     if (inodeBlocks.containsKey(key)) {
       result = inodeAndVersionBlocks. get(key);
@@ -195,8 +196,8 @@ public class BlockInfoContext extends BaseEntityContext<Long, BlockInfo> {
           throws TransactionContextException, StorageException {
     List<BlockInfo> result = null;
     final Integer inodeId = (Integer) params[0];
-    final Byte version = (Byte) params[1];
-    final Byte lastVersion = (Byte) params[2];
+    final Integer version = (Integer) params[1];
+    final Integer lastVersion = (Integer) params[2];
 
     aboutToAccessStorage(bFinder, params);
     result = dataAccess.findCompleteBlocksByINodeIdAndPrevVersion(inodeId, version, lastVersion);
