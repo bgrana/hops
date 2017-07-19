@@ -53,7 +53,9 @@ public class BlockInfo extends Block {
     ByMaxBlockIndexForINode,
     ByBlockIdsAndINodeIds,
     ByINodeIdAndVersion,
-    ByINodeIdAndPrevVersion;
+    ByINodeIdAndPrevVersion,
+    ByINodeIdAndOnDemand,
+    ByINodeIdAndOldBlock;
     
     @Override
     public Class getType() {
@@ -76,6 +78,10 @@ public class BlockInfo extends Block {
         case ByINodeIdAndVersion:
           return Annotation.BatchedPrunedIndexScan;
         case ByINodeIdAndPrevVersion:
+          return Annotation.BatchedPrunedIndexScan;
+        case ByINodeIdAndOnDemand:
+          return Annotation.BatchedPrunedIndexScan;
+        case ByINodeIdAndOldBlock:
           return Annotation.BatchedPrunedIndexScan;
         default:
           throw new IllegalStateException();
@@ -146,6 +152,8 @@ public class BlockInfo extends Block {
   private int blockIndex = -1;
   private long timestamp = 1;
   private boolean isOldBlock = false;
+  private boolean isOnDemand = false;
+  private boolean isInRotation = true;
   
   protected int inodeId = INode.NON_EXISTING_ID;
   
@@ -399,6 +407,30 @@ public class BlockInfo extends Block {
     save();
   }
 
+  public boolean isOnDemand() { return isOnDemand; }
+
+  public void setOnDemandNoPersistance(boolean isOnDemand) {
+    this.isOnDemand = isOnDemand;
+  }
+
+  public void setOnDemand(boolean isOnDemand)
+          throws StorageException, TransactionContextException {
+    setOnDemandNoPersistance(isOnDemand);
+    save();
+  }
+
+  public boolean isInRotation() { return isInRotation; }
+
+  public void setInRotationNoPersistance(boolean isInRotation) {
+    this.isInRotation= isInRotation;
+  }
+
+  public void setInRotation(boolean isInRotation)
+          throws StorageException, TransactionContextException {
+    setInRotationNoPersistance(isInRotation);
+    save();
+  }
+
   protected DatanodeDescriptor[] getDatanodes(DatanodeManager datanodeMgr,
       List<? extends ReplicaBase> replicas) {
     int numLocations = replicas.size();
@@ -503,8 +535,8 @@ public class BlockInfo extends Block {
     }
   }
 
-  public void removeIfNotOld() throws StorageException, TransactionContextException {
-    if (!isOldBlock) {
+  public void removeIfObsolete() throws StorageException, TransactionContextException {
+    if (!isOldBlock && !isOnDemand) {
       remove();
     }
   }

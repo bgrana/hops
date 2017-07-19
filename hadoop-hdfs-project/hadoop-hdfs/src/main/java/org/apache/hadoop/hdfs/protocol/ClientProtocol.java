@@ -1383,6 +1383,20 @@ public interface ClientProtocol {
       throws IOException;
 
   /**
+   * Take a snapshot of a file
+   *
+   * @param src
+   *    path of the file to snapshot
+   * @param version TODO: Not sure if I should allow this
+   *    the version of the file to snapshot
+   * @param clientName
+   *    name of the current client
+   * @throws IOException
+   */
+  public void takeSnapshot(String src, int version, String clientName)
+      throws IOException;
+
+  /**
    * Rollback to a previous state of the file invalidating all
    * versions between that state and the last one
    *

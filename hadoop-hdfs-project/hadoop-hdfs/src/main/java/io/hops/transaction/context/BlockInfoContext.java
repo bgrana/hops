@@ -128,6 +128,10 @@ public class BlockInfoContext extends BaseEntityContext<Long, BlockInfo> {
         return findByInodeIdAndVersion(bFinder, params);
       case ByINodeIdAndPrevVersion:
         return findByInodeIdAndPrevVersion(bFinder, params);
+      case ByINodeIdAndOnDemand:
+        return findOnDemandVersionsByInodeId(bFinder, params);
+      case ByINodeIdAndOldBlock:
+        return findOldBlocksByINodeId(bFinder, params);
     }
     throw new RuntimeException(UNSUPPORTED_FINDER);
   }
@@ -179,7 +183,7 @@ public class BlockInfoContext extends BaseEntityContext<Long, BlockInfo> {
       hit(bFinder, result, "inodeid", inodeId, "version", version);
     } else {
       aboutToAccessStorage(bFinder, params);
-      result = dataAccess.findByINodeIdAndVersion(inodeId, version);
+      result = dataAccess.findByINodeIdAndVersion(inodeId, version, onlyOnDemand);
       inodeAndVersionBlocks.put(key, syncBlockInfoInstances(result));
       miss(bFinder, result, "inodeid", inodeId, "version", version);
     }
@@ -197,6 +201,30 @@ public class BlockInfoContext extends BaseEntityContext<Long, BlockInfo> {
     aboutToAccessStorage(bFinder, params);
     result = dataAccess.findCompleteBlocksByINodeIdAndPrevVersion(inodeId, version, lastVersion);
     miss(bFinder, result, "inodeid", inodeId, "version", version, "lastVersion", lastVersion);
+    return syncBlockInfoInstances(result);
+  }
+
+  private List<BlockInfo> findOldBlocksByINodeId(BlockInfo.Finder bFinder,
+                                                      final Object[] params)
+          throws TransactionContextException, StorageException {
+    List<BlockInfo> result = null;
+    final Integer inodeId = (Integer) params[0];
+
+    aboutToAccessStorage(bFinder, params);
+    result = dataAccess.findOldBlocksByINodeId(inodeId);
+    miss(bFinder, result, "inodeid", inodeId);
+    return syncBlockInfoInstances(result);
+  }
+
+  private List<BlockInfo> findOnDemandVersionsByInodeId(BlockInfo.Finder bFinder,
+                                                      final Object[] params)
+          throws TransactionContextException, StorageException {
+    List<BlockInfo> result = null;
+    final Integer inodeId = (Integer) params[0];
+
+    aboutToAccessStorage(bFinder, params);
+    result = dataAccess.findOnDemandVersionsByINodeId(inodeId);
+    miss(bFinder, result, "inodeid", inodeId);
     return syncBlockInfoInstances(result);
   }
 

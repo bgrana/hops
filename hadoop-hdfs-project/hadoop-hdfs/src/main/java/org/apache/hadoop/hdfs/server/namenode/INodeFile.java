@@ -33,6 +33,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -113,7 +115,7 @@ public class INodeFile extends INode implements BlockCollection {
 
     // Blocks of the given version
     List<BlockInfo> blocks = (List<BlockInfo>) EntityManager
-            .findList(BlockInfo.Finder.ByINodeIdAndVersion,id, version);
+            .findList(BlockInfo.Finder.ByINodeIdAndVersion,id, version, false);
 
     // Complete blocks from previous versions
     blocks.addAll(EntityManager.findList(
@@ -146,6 +148,73 @@ public class INodeFile extends INode implements BlockCollection {
     } else {
       return BlockInfo.EMPTY_ARRAY;
     }
+  }
+
+  public BlockInfo[] getOnDemandBlocks(int version)
+          throws StorageException, TransactionContextException {
+    if (getId() == INode.NON_EXISTING_ID) {
+      return BlockInfo.EMPTY_ARRAY;
+    }
+
+    // On-demand Blocks of the given version
+    List<BlockInfo> blocks = (List<BlockInfo>) EntityManager
+            .findList(BlockInfo.Finder.ByINodeIdAndVersion,id, version, true);
+
+    // TODO: Specify if version is in rotation or not
+    if (blocks.get(0).isInRotation()) {
+      blocks.addAll(EntityManager.findList(
+              BlockInfo.Finder.ByINodeIdAndOldBlock, id));
+    }
+    else {
+      // Complete blocks from previous versions
+      blocks.addAll(EntityManager.findList(
+              BlockInfo.Finder.ByINodeIdAndPrevVersion,
+              id, version, this.getLastVersion()));
+    }
+
+    if (blocks != null) {
+      Collections.sort(blocks, BlockInfo.Order.ByBlockIndex);
+      BlockInfo[] blks = new BlockInfo[blocks.size()];
+      return blocks.toArray(blks);
+    } else {
+      return BlockInfo.EMPTY_ARRAY;
+    }
+  }
+
+  public BlockInfo[] getBlocksWithVersion(int version)
+          throws StorageException, TransactionContextException {
+    if (getId() == INode.NON_EXISTING_ID) {
+      return BlockInfo.EMPTY_ARRAY;
+    }
+
+    // Blocks of the given version
+    List<BlockInfo> blocks = (List<BlockInfo>) EntityManager
+            .findList(BlockInfo.Finder.ByINodeIdAndVersion,id, version, false);
+
+    if (blocks != null) {
+      Collections.sort(blocks, BlockInfo.Order.ByBlockIndex);
+      BlockInfo[] blks = new BlockInfo[blocks.size()];
+      return blocks.toArray(blks);
+    } else {
+      return BlockInfo.EMPTY_ARRAY;
+    }
+  }
+
+  public Set<Integer> getOnDemandVersions()
+          throws StorageException, TransactionContextException {
+    if (getId() == INode.NON_EXISTING_ID) {
+      return null;
+    }
+
+    // Blocks of the given version
+    List<BlockInfo> blocks = (List<BlockInfo>) EntityManager
+            .findList(BlockInfo.Finder.ByINodeIdAndOnDemand,id);
+    Set<Integer> versions = new HashSet<>();
+    for(BlockInfo bi : blocks) {
+      versions.add(bi.getBlockVersion());
+    }
+
+    return versions;
   }
 
   /**
@@ -370,22 +439,55 @@ public class INodeFile extends INode implements BlockCollection {
    * @throws StorageException
    * @throws TransactionContextException
    */
-  public void removeOldBlocks() throws StorageException, TransactionContextException {
+  public void removeObsoleteBlocks() throws StorageException, TransactionContextException {
 
     // Version to delete is always the last because it has been
     // incremented previously
-    BlockInfo[] blocks = getBlocks(last);
+    BlockInfo[] blocks = getBlocks(lastVersion);
     for (BlockInfo block : blocks) {
 
       if (!block.isOldBlock()) {
+        // If the block has an "on-demand" version put it out of rotation
+        // instead of setting it as old so it does not interfere with
+        // automatic versions
+        if(block.isOnDemand()) {
+          block.setInRotation(false);
+        }
+        
         // If a block with this version is fully-written, set isOldBlock = true
         // This way the block is kept without having to change its version
-        if (block.getNumBytes() == getPreferredBlockSize()){
+        else if (block.getNumBytes() == getPreferredBlockSize()){
           block.setOldBlock(true);
         } else {
-          block.removeIfNotOld();
+          block.removeIfObsolete();
         }
       }
     }
+  }
+
+  public void increaseLastVersion()
+          throws TransactionContextException, StorageException {
+    int nextVersion = 0;
+    if (lastVersion != MAX_VERSION) {
+      nextVersion = lastVersion + 1;
+    }
+
+    if(isOnDemandVersion(nextVersion)) {
+      this.setLastVersionNoPersistance(nextVersion);
+      this.increaseLastVersion();
+    }
+    else {
+      this.setLastVersion(nextVersion);
+    }
+  }
+
+  public boolean isOnDemandVersion(int version)
+      throws StorageException, TransactionContextException {
+    Set<Integer> onDemandVersions = getOnDemandVersions();
+
+    if (onDemandVersions.contains(version)) {
+      return true;
+    }
+    return false;
   }
 }

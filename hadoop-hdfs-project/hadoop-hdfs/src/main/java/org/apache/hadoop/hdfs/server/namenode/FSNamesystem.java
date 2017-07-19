@@ -1836,8 +1836,8 @@ public class FSNamesystem
 
     // Increase file last version before committing any new blocks
     cons.increaseLastVersion();
-    // Remove old blocks unless they are complete
-    cons.removeObsoleteBlocks(false);
+    // Remove obsolete blocks that have the new last version
+    cons.removeObsoleteBlocks();
     LocatedBlock ret = blockManager.convertLastBlockToUnderConstruction(cons);
 
     return ret;
@@ -2481,6 +2481,51 @@ public class FSNamesystem
   }
 
   /**
+   * Take a snapshot of a version of a given file
+   *
+   * @param src
+   * @param version
+   * @param holder
+   * @throws IOException
+   *     on error (eg lease mismatch, file not open, file deleted)
+   */
+  void takeSnapshot(final String src, final int version, final String holder) throws IOException {
+    new HopsTransactionalRequestHandler(HDFSOperationType.TAKE_SNAPSHOT, src) {
+      @Override
+      public void acquireLock(TransactionLocks locks) throws IOException { // TODO: Check required locks
+        LockFactory lf = getInstance();
+        locks.add(lf.getINodeLock(!dir.isQuotaEnabled()?true:false/*skip Inode Atrr*/, nameNode, INodeLockType.WRITE,
+                INodeResolveType.PATH, src))
+                .add(lf.getLeaseLock(LockType.READ, holder))
+                .add(lf.getLeasePathLock(LockType.READ_COMMITTED)).add(lf.getBlockLock())
+                .add(lf.getBlockRelated(BLK.RE, BLK.CR, BLK.ER, BLK.UC, BLK.UR,
+                        BLK.IV));
+      }
+
+      @Override
+      public Object performTask() throws IOException {
+        // Check file leases
+        INodeFile pendingFile;
+        try {
+          pendingFile = checkLease(src, holder);
+        } catch (LeaseExpiredException lee) {
+          throw lee;
+        }
+
+        // Get blocks for the given version
+        BlockInfo[] blocks = pendingFile.getOnDemandBlocks(version);
+
+        for (BlockInfo bi : blocks) {
+          // Mark each block as on-demand
+          bi.setOnDemand(true);
+        }
+
+        return null;
+      }
+    }.handle(this);
+  }
+
+  /**
    * Rollback to a previous state of the file invalidating all
    * versions between that state and the last one
    *
@@ -2508,10 +2553,10 @@ public class FSNamesystem
       @Override
       public Object performTask() throws IOException {
 
-        if (version > INode.MAX_AUTO_VERSION || version < INode.MIN_AUTO_VERSION) {
+        if (version > INode.MAX_VERSION || version < INode.MIN_VERSION) {
           throw new HopsException("Rollback is only available for automatic versions.\n"
-                  + "Please try again with a version between " + INode.MIN_AUTO_VERSION
-                  + " and " + INode.MAX_AUTO_VERSION + ".");
+                  + "Please try again with a version between " + INode.MIN_VERSION
+                  + " and " + INode.MAX_VERSION + ".");
         }
         // Check file leases
         INodeFile pendingFile;
@@ -2533,7 +2578,7 @@ public class FSNamesystem
         for(BlockInfo bi : blocks) {
           if (bi.getBlockVersion() > version &&
                   bi.getBlockVersion() <= pendingFile.getLastVersion()) {
-            bi.removeIfNotOld();
+            bi.removeIfObsolete();
           }
         }
 

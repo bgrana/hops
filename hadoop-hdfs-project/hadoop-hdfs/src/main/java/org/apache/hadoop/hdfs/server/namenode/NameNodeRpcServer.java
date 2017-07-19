@@ -1092,6 +1092,11 @@ class NameNodeRpcServer implements NamenodeProtocols {
         parityPath, block, isParity);
   }
 
+  @Override // ClientProtocol
+  public void takeSnapshot(String src, int version, String clientName) throws IOException {
+    namesystem.takeSnapshot(src, version, clientName);
+  }
+
   @Override
   public void rollback(String src, int version, String clientName) throws IOException {
     namesystem.rollback(src, version, clientName);
