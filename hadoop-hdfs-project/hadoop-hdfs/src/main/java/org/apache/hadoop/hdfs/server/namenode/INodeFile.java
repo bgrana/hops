@@ -437,7 +437,7 @@ public class INodeFile extends INode implements BlockCollection {
         
         // If a block with this version is fully-written, set isOldBlock = true
         // This way the block is kept without having to change its version
-        else if (block.getNumBytes() == getPreferredBlockSize()){
+        if (block.getNumBytes() == getPreferredBlockSize()){
           block.setOldBlock(true);
         } else {
           block.removeIfObsolete();
