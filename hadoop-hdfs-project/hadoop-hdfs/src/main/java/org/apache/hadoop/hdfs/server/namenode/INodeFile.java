@@ -424,7 +424,7 @@ public class INodeFile extends INode implements BlockCollection {
 
     // Version to delete is always the last because it has been
     // incremented previously
-    BlockInfo[] blocks = getBlocks(lastVersion);
+    BlockInfo[] blocks = getBlocks(this.getLastVersion());
     for (BlockInfo block : blocks) {
 
       if (!block.isOldBlock()) {
@@ -449,8 +449,8 @@ public class INodeFile extends INode implements BlockCollection {
   public void increaseLastVersion()
           throws TransactionContextException, StorageException {
     int nextVersion = 0;
-    if (lastVersion != MAX_VERSION) {
-      nextVersion = lastVersion + 1;
+    if (this.getLastVersion() != MAX_VERSION) {
+      nextVersion = this.getLastVersion() + 1;
     }
 
     if(isOnDemandVersion(nextVersion)) {

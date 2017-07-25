@@ -1065,7 +1065,7 @@ public class DFSClient implements java.io.Closeable {
    */
   @VisibleForTesting
   public LocatedBlocks getLocatedBlocks(final String src, final long start,
-      final long length, final byte version) throws IOException {
+      final long length, final int version) throws IOException {
     ClientActionHandler handler = new ClientActionHandler() {
       @Override
       public Object doAction(ClientProtocol namenode)
@@ -1077,10 +1077,10 @@ public class DFSClient implements java.io.Closeable {
   }
 
   /**
-   * @see ClientProtocol#getBlockLocations(String, long, long, byte)
+   * @see ClientProtocol#getBlockLocations(String, long, long, int)
    */
   static LocatedBlocks callGetBlockLocations(ClientProtocol namenode,
-      String src, long start, long length, byte version) throws IOException {
+      String src, long start, long length, int version) throws IOException {
     try {
       return namenode.getBlockLocations(src, start, length, version);
     } catch (RemoteException re) {
@@ -1191,7 +1191,7 @@ public class DFSClient implements java.io.Closeable {
    */
   public BlockLocation[] getBlockLocations(String src, long start, long length)
       throws IOException, UnresolvedLinkException {
-    LocatedBlocks blocks = getLocatedBlocks(src, start, length, (byte) -1);
+    LocatedBlocks blocks = getLocatedBlocks(src, start, length, -1);
     BlockLocation[] locations = DFSUtil.locatedBlocks2Locations(blocks);
     HdfsBlockLocation[] hdfsLocations = new HdfsBlockLocation[locations.length];
     for (int i = 0; i < locations.length; i++) {

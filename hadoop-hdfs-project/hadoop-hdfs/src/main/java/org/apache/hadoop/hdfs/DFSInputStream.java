@@ -69,7 +69,7 @@ public class DFSInputStream extends FSInputStream
   private boolean closed = false;
 
   private final String src;
-  private final byte version;
+  private final int version;
   private final long prefetchSize;
   private BlockReader blockReader = null;
   private final boolean verifyChecksum;

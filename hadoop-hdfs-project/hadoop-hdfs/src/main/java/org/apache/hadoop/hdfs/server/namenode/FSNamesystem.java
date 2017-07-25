@@ -1125,6 +1125,8 @@ public class FSNamesystem
 
       long now = now();
       final INodeFile inode = INodeFile.valueOf(dir.getINode(src), src);
+      // If version == -1 get the last version
+      version = version == -1 ? inode.getLastVersion() : version;
       if (doAccessTime && isAccessTimeSupported()) {
         if (now <= inode.getAccessTime() + getAccessTimePrecision()) {
           // if we have to set access time but we only have the readlock, then

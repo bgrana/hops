@@ -133,7 +133,6 @@ public abstract class INode implements Comparable<byte[]> {
   protected INodeDirectory parent;
   protected long modificationTime;
   protected long accessTime;
-  protected int lastVersion;
   
 
   public static final int NON_EXISTING_ID = 0;
@@ -194,6 +193,8 @@ public abstract class INode implements Comparable<byte[]> {
   private int groupId;
 
   private FsPermission permission;
+
+  private int lastVersion = 0;
 
   INode(PermissionStatus permissions, long mTime, long atime)
       throws IOException {

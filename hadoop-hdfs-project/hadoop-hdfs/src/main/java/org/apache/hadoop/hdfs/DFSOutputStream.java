@@ -2102,7 +2102,7 @@ public class DFSOutputStream extends FSOutputSummer implements Syncable {
     this.parityLength = parityLength;
     if (sourceFile != null) {
       this.sourceBlocks = new ArrayList(dfsClient.getLocatedBlocks(
-          sourceFile, 0, Long.MAX_VALUE).getLocatedBlocks());
+          sourceFile, 0, Long.MAX_VALUE, -1).getLocatedBlocks());
       Collections.sort(sourceBlocks, LocatedBlock.blockIdComparator);
     }
   }
