@@ -105,7 +105,19 @@ public class BlockInfoDALAdaptor extends
   @Override
   public List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo> findByINodeIdAndVersion(int iNodeId, int version, boolean onlyOnDemand) throws StorageException {
     return (List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo>) convertDALtoHDFS(
-            dataAccess.findByINodeIdAndVersion(iNodeId, version));
+            dataAccess.findByINodeIdAndVersion(iNodeId, version, onlyOnDemand));
+  }
+
+  @Override
+  public List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo> findOnDemandVersionsByINodeId(int iNodeId) throws StorageException {
+    return (List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo>) convertDALtoHDFS(
+            dataAccess.findOnDemandVersionsByINodeId(iNodeId));
+  }
+
+  @Override
+  public List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo> findOldBlocksByINodeId(int iNodeId) throws StorageException {
+    return (List<org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo>) convertDALtoHDFS(
+            dataAccess.findOldBlocksByINodeId(iNodeId));
   }
 
   @Override
@@ -127,7 +139,8 @@ public class BlockInfoDALAdaptor extends
           new BlockInfo(hdfsClass.getBlockId(), hdfsClass.getBlockIndex(),
               hdfsClass.getInodeId(), hdfsClass.getNumBytes(),
               hdfsClass.getGenerationStamp(),
-              hdfsClass.getBlockUCState().ordinal(), hdfsClass.getTimestamp());
+              hdfsClass.getBlockUCState().ordinal(), hdfsClass.getTimestamp(),
+              hdfsClass.isOldBlock(), hdfsClass.isOnDemand(), hdfsClass.isInRotation());
       if (hdfsClass instanceof BlockInfoUnderConstruction) {
         BlockInfoUnderConstruction ucBlock =
             (BlockInfoUnderConstruction) hdfsClass;
