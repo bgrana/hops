@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 public class Block implements Writable, Comparable<Block> {
   public static final String BLOCK_FILE_PREFIX = "blk_";
   public static final String METADATA_EXTENSION = ".meta";
+  final static long BLOCK_VERSION_MASK = 0x00000000000000FFL;
 
   static {                                      // register a ctor
     WritableFactories.setFactory(Block.class, new WritableFactory() {
@@ -128,9 +129,8 @@ public class Block implements Writable, Comparable<Block> {
   }
 
   public long getNextBlockId() {
-    int version = INode.getBlockVersion(blockId);
-    if (version < INode.MAX_VERSION) {  // If last version number:
-      return blockId - version;             // Next version number 0
+    if (getBlockVersion() < INode.MAX_VERSION) {  // If last version number:
+      return blockId & ~BLOCK_VERSION_MASK;             // Next version number 0
     }
     else {
       return blockId + 1;
@@ -138,8 +138,7 @@ public class Block implements Writable, Comparable<Block> {
   }
 
   public long getPrevBlockId() {
-    int version = INode.getBlockVersion(blockId);
-    if (version == 0) {
+    if (getBlockVersion() == 0) {
       return blockId + INode.MAX_VERSION;
     }
     else {
@@ -173,6 +172,10 @@ public class Block implements Writable, Comparable<Block> {
   
   public void setGenerationStampNoPersistance(long stamp) {
     generationStamp = stamp;
+  }
+
+  public int getBlockVersion() {
+    return (int) (blockId & BLOCK_VERSION_MASK);
   }
 
   /**
@@ -256,6 +259,11 @@ public class Block implements Writable, Comparable<Block> {
       return false; // only one null
     }
     return a.blockId == b.blockId && a.generationStamp == b.generationStamp;
+  }
+
+  public static long appendVersionToBlockId(long blockId, int version) {
+    // Shift 1 byte (8 bits) to make room for the version and add the version
+    return ((blockId << 8) | version);
   }
 
   @Override // Object

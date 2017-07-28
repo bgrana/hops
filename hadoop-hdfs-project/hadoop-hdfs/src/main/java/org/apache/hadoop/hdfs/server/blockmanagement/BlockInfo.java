@@ -384,15 +384,6 @@ public class BlockInfo extends Block {
     save();
   }
 
-  public int getBlockVersion() {
-    return (int) (getBlockId() & INode.BLOCK_VERSION_MASK);
-  }
-
-  public void setBlockVersion(int version)
-          throws StorageException, TransactionContextException {
-    setBlockId((getBlockId() & ~INode.BLOCK_VERSION_MASK) | version);
-  }
-
   public boolean isOldBlock() {
     return isOldBlock;
   }

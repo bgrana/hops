@@ -149,12 +149,10 @@ public abstract class INode implements Comparable<byte[]> {
   final static short BLOCK_BITS = 40;
   final static short REPLICATION_BITS = 8;
   final static short BOOLEAN_BITS = 8;
-  final static short VERSION_BITS = 8;
   final static short HAS_BLKS_BITS = 1; // this is out of the 8 bits for the storing booleans
   //Header mask 64-bit representation
-  //Format:[8 bits for flags][8 bits for replication degree][40 bits for PreferredBlockSize][8 bits for Version]
-  public final static long BLOCK_VERSION_MASK = 0x00000000000000FFL;
-  final static long BLOCK_SIZE_MASK =    0x0000FFFFFFFFFF00L;
+  //Format:[8 bits for flags][8 bits for replication degree][48 bits for PreferredBlockSize]
+  final static long BLOCK_SIZE_MASK =    0x0000FFFFFFFFFFFFL;
   final static long REPLICATION_MASK =   0x00FF000000000000L;
   final static long FLAGS_MASK =         0xFF00000000000000L;
   final static long HAS_BLKS_MASK =      0x0100000000000000L;
@@ -888,7 +886,7 @@ public abstract class INode implements Comparable<byte[]> {
   }
 
   public static long getPreferredBlockSize(long header) {
-    return (header & BLOCK_SIZE_MASK) >> VERSION_BITS;
+    return (header & BLOCK_SIZE_MASK);
   }
 
   protected void setPreferredBlockSizeNoPersistance(long preferredBlkSize) {
@@ -899,10 +897,6 @@ public abstract class INode implements Comparable<byte[]> {
     header = (header & ~BLOCK_SIZE_MASK) | (preferredBlkSize & BLOCK_SIZE_MASK);
   }
 
-  public static int getBlockVersion(long header) {
-    return (int) (header & BLOCK_VERSION_MASK);
-  }
-
   public long getHeader() {
     return header;
   }
@@ -910,7 +904,6 @@ public abstract class INode implements Comparable<byte[]> {
   public void setHeaderNoPersistance(long header) {
     long preferecBlkSize = getPreferredBlockSize(header);
     short replication = getBlockReplication(header);
-    int version = getBlockVersion(header);
 
     if (preferecBlkSize < 0) {
       throw new IllegalArgumentException("Unexpected value for the " +
@@ -920,11 +913,6 @@ public abstract class INode implements Comparable<byte[]> {
     if (replication < 0) {
       throw new IllegalArgumentException("Unexpected value for the " +
           "replication [" + replication + "]");
-    }
-
-    if (version < MIN_VERSION || version > MAX_VERSION) {
-      throw new IllegalArgumentException("Unexpected value for the " +
-              "version [" + version + "]");
     }
 
     this.header = header;

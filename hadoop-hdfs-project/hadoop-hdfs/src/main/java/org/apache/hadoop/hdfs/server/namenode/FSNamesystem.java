@@ -2621,7 +2621,9 @@ public class FSNamesystem
       throws IOException, StorageException {
 
     // Set block version to new version
-    long blockId = pendingFile.getLastVersion() + IDsGeneratorFactory.getInstance().getUniqueBlockID();
+    long blockId = Block.appendVersionToBlockId(
+            IDsGeneratorFactory.getInstance().getUniqueBlockID(),
+            pendingFile.getLastVersion());
     Block b = new Block(blockId
         , 0, 0); // HOP. previous code was getFSImage().getUniqueBlockId()
     // Increment the generation stamp for every new block.
