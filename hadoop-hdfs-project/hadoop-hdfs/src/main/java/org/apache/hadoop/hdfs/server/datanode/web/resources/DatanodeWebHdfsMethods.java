@@ -434,7 +434,7 @@ public class DatanodeWebHdfsMethods {
         final DFSClient dfsclient = new DFSClient(nnRpcAddr, conf);
         HdfsDataInputStream in = null;
         try {
-          in = new HdfsDataInputStream(dfsclient.open(fullpath, b, true));
+          in = new HdfsDataInputStream(dfsclient.open(fullpath, b, true, -1));
           in.seek(offset.getValue());
         } catch (IOException ioe) {
           IOUtils.cleanup(LOG, in);

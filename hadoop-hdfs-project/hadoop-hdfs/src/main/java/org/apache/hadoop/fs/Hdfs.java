@@ -328,7 +328,7 @@ public class Hdfs extends AbstractFileSystem {
   public HdfsDataInputStream open(Path f, int bufferSize)
       throws IOException, UnresolvedLinkException {
     return new DFSClient.DFSDataInputStream(
-        dfs.open(getUriPath(f), bufferSize, verifyChecksum));
+        dfs.open(getUriPath(f), bufferSize, verifyChecksum, -1));
   }
 
   @Override

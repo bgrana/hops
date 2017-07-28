@@ -253,7 +253,7 @@ public class DistributedFileSystem extends FileSystem {
   public HdfsDataInputStream open(Path f, int bufferSize) throws IOException {
     statistics.incrementReadOps(1);
     return new DFSClient.DFSDataInputStream(
-        dfs.open(getPathName(f), bufferSize, verifyChecksum));
+        dfs.open(getPathName(f), bufferSize, verifyChecksum, -1));
   }
 
   /**

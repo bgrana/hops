@@ -92,7 +92,7 @@ public class StreamFile extends DfsServlet {
     OutputStream out = null;
 
     try {
-      in = dfs.open(filename);
+      in = dfs.open(filename, -1);
       out = response.getOutputStream();
       final long fileLen = in.getFileLength();
       if (reqRanges != null) {
