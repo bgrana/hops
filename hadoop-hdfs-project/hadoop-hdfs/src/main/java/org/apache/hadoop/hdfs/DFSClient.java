@@ -1272,7 +1272,7 @@ public class DFSClient implements java.io.Closeable {
     return volumeBlockLocations;
   }
   
-  public DFSInputStream open(String src, byte version)
+  public DFSInputStream open(String src, int version)
       throws IOException, UnresolvedLinkException {
     return open(src, dfsClientConf.ioBufferSize, true, null, version);
   }
@@ -1287,7 +1287,7 @@ public class DFSClient implements java.io.Closeable {
    */
   @Deprecated
   public DFSInputStream open(String src, int buffersize, boolean verifyChecksum,
-      FileSystem.Statistics stats, byte version) throws IOException, UnresolvedLinkException {
+      FileSystem.Statistics stats, int version) throws IOException, UnresolvedLinkException {
     return open(src, buffersize, verifyChecksum, version);
   }
   
@@ -1298,7 +1298,7 @@ public class DFSClient implements java.io.Closeable {
    * inner subclass of InputStream that does the right out-of-band
    * work.
    */
-  public DFSInputStream open(String src, int buffersize, boolean verifyChecksum, byte version)
+  public DFSInputStream open(String src, int buffersize, boolean verifyChecksum, int version)
       throws IOException, UnresolvedLinkException {
     checkOpen();
     //    Get block info from namenode

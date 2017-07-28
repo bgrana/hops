@@ -109,7 +109,7 @@ public class DFSInputStream extends FSInputStream
   }
   
   DFSInputStream(DFSClient dfsClient, String src, int buffersize,
-      boolean verifyChecksum, byte version) throws IOException, UnresolvedLinkException {
+      boolean verifyChecksum, int version) throws IOException, UnresolvedLinkException {
     this.dfsClient = dfsClient;
     this.verifyChecksum = verifyChecksum;
     this.buffersize = buffersize;
