@@ -935,6 +935,38 @@ public class ClientNamenodeProtocolServerSideTranslatorPB
   }
 
   @Override
+  public ClientNamenodeProtocolProtos.TakeSnapshotResponseProto takeSnapshot(
+          RpcController controller,
+          ClientNamenodeProtocolProtos.TakeSnapshotRequestProto request)
+          throws ServiceException {
+    try {
+      server
+              .takeSnapshot(request.getSrc(), request.getVersion(), request.getClientName());
+      ClientNamenodeProtocolProtos.TakeSnapshotResponseProto.Builder builder =
+              ClientNamenodeProtocolProtos.TakeSnapshotResponseProto.newBuilder();
+      return builder.build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
+  public ClientNamenodeProtocolProtos.RollbackResponseProto rollback(
+          RpcController controller,
+          ClientNamenodeProtocolProtos.RollbackRequestProto request)
+          throws ServiceException {
+    try {
+      server
+              .rollback(request.getSrc(), request.getVersion(), request.getClientName());
+      ClientNamenodeProtocolProtos.RollbackResponseProto.Builder builder =
+              ClientNamenodeProtocolProtos.RollbackResponseProto.newBuilder();
+      return builder.build();
+    } catch (IOException e) {
+      throw new ServiceException(e);
+    }
+  }
+
+  @Override
   public ClientNamenodeProtocolProtos.RevokeEncodingResponseProto revokeEncoding(
       RpcController controller,
       ClientNamenodeProtocolProtos.RevokeEncodingRequestProto request)

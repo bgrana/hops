@@ -174,6 +174,22 @@ public class ClientNamenodeProtocolTranslatorPB
   }
 
   @Override
+  public LocatedBlocks getBlockLocations(String src, long offset, long length, int version)
+          throws AccessControlException, FileNotFoundException,
+          UnresolvedLinkException, IOException {
+    GetBlockLocationsRequestProto req =
+            GetBlockLocationsRequestProto.newBuilder().setSrc(src).setOffset(offset)
+                    .setLength(length).setVersion(version).build();
+    try {
+      GetBlockLocationsResponseProto resp =
+              rpcProxy.getBlockLocations(null, req);
+      return resp.hasLocations() ? PBHelper.convert(resp.getLocations()) : null;
+    } catch (ServiceException e) {
+      throw ProtobufHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
   public LocatedBlocks getMissingBlockLocations(String filePath)
       throws AccessControlException, FileNotFoundException,
       UnresolvedLinkException, IOException {
@@ -927,6 +943,35 @@ public class ClientNamenodeProtocolTranslatorPB
     try {
       return PBHelper.convert(
           rpcProxy.getRepairedBlockLocations(null, request).getLocatedBlocks());
+    } catch (ServiceException e) {
+      throw ProtobufHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public void takeSnapshot(String src, int version, String clientName) throws IOException {
+    try {
+      ClientNamenodeProtocolProtos.TakeSnapshotRequestProto
+              request =
+              ClientNamenodeProtocolProtos.TakeSnapshotRequestProto
+                      .newBuilder().setSrc(src).setVersion(version)
+                      .setClientName(clientName).build();
+      rpcProxy.takeSnapshot(null, request);
+    } catch (ServiceException e) {
+      throw ProtobufHelper.getRemoteException(e);
+    }
+  }
+
+  @Override
+  public void rollback(String src, int version, String clientName) throws IOException {
+
+    try {
+      ClientNamenodeProtocolProtos.RollbackRequestProto
+              request =
+              ClientNamenodeProtocolProtos.RollbackRequestProto
+                      .newBuilder().setSrc(src).setVersion(version)
+                      .setClientName(clientName).build();
+      rpcProxy.rollback(null, request);
     } catch (ServiceException e) {
       throw ProtobufHelper.getRemoteException(e);
     }

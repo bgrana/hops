@@ -44,6 +44,7 @@ message GetBlockLocationsRequestProto {
   required string src = 1; // file name
   required uint64 offset = 2; // range start offset
   required uint64 length = 3; // range length
+  required uint32 version = 4; // version
 }
 
 message GetBlockLocationsResponseProto {
@@ -81,6 +82,24 @@ message GetServerDefaultsRequestProto { // No parameters
 
 message GetServerDefaultsResponseProto {
   required FsServerDefaultsProto serverDefaults = 1;
+}
+
+message TakeSnapshotRequestProto {
+  required string src = 1;
+  required uint32 version = 2;
+  required string clientName = 3;
+}
+
+message TakeSnapshotResponseProto {
+}
+
+message RollbackRequestProto {
+  required string src = 1;
+  required uint32 version = 2;
+  required string clientName = 3;
+}
+
+message RollbackResponseProto {
 }
 
 enum CreateFlagProto {
@@ -577,4 +596,7 @@ service ClientNamenodeProtocol {
   rpc getRepairedBlockLocations (GetRepairedBlockLocationsRequsestProto) returns (GetRepairedBlockLocationsResponseProto);
   rpc changeConf (ChangeConfProto) returns (ChangeConfResponseProto);
   rpc flushCache (FlushUsersCacheRequestProto) returns (FlushUsersCacheResponseProto);
+
+  rpc takeSnapshot (TakeSnapshotRequestProto) returns (TakeSnapshotResponseProto);
+  rpc rollback (RollbackRequestProto) returns (RollbackResponseProto);
 }

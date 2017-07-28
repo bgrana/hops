@@ -41,7 +41,7 @@ public class DFSClientAdapter {
   }
   
   public static LocatedBlocks callGetBlockLocations(ClientProtocol namenode,
-      String src, long start, long length) throws IOException {
-    return DFSClient.callGetBlockLocations(namenode, src, start, length);
+      String src, long start, long length, int version) throws IOException {
+    return DFSClient.callGetBlockLocations(namenode, src, start, length, version);
   }
 }
